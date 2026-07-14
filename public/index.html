@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZOHANworkspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+<style>:root { color-scheme: light; }</style>
+</head>
+<body class="bg-paper text-ink font-body min-h-screen flex flex-col overflow-hidden select-none">
+<div class="bg-blob-field"><span class="bg-blob b1"></span><span class="bg-blob b2"></span><span class="bg-blob b3"></span></div>
+
+
+<!-- ================= LOGIN / SIGNUP WALL ================= -->
+<div id="login-wall-overlay" class="fixed inset-0 bg-ink/90 flex items-center justify-center z-[100] p-4">
+  <div class="w-full max-w-lg bg-paper border-2 rule thick hard-shadow p-0 space-y-0 max-h-[92vh] overflow-y-auto enter">
+    <div class="p-5 border-b-2 rule thick flex items-center justify-between">
+      <div>
+        <div class="data-label text-red">Sign in to continue</div>
+        <h2 class="brand-mark text-3xl">ZOHAN<span style="font-weight:400;">workspace</span></h2>
+      </div>
+      <div class="text-3xl">✨</div>
+    </div>
+
+    <div class="p-5 space-y-4">
+      <div class="flex border-2 rule thick text-xs data-label">
+        <button onclick="setAuthMode('login')" id="auth-tab-login" class="flex-1 py-2 bg-ink text-paper">SIGN IN</button>
+        <button onclick="setAuthMode('signup')" id="auth-tab-signup" class="flex-1 py-2">NEW UNIT / SIGN UP</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="data-label block mb-1">Email:</label>
+          <input type="email" id="login-email-input" placeholder="you@example.com" class="w-full bg-white border-2 rule thick p-3 text-sm text-ink focus:outline-none focus:border-red">
+        </div>
+        <div>
+          <label class="data-label block mb-1">Password:</label>
+          <input type="password" id="login-password-input" placeholder="min. 6 characters" class="w-full bg-white border-2 rule thick p-3 text-sm text-ink focus:outline-none focus:border-red">
+        </div>
+
+        <div id="signup-only-fields" class="hidden space-y-3 pt-1 border-t-2 rule thick">
+          <div>
+            <label class="data-label block mb-1">Your First Name:</label>
+            <input type="text" id="login-name-input" placeholder="e.g. Zohan" class="w-full bg-white border-2 rule thick p-3 text-sm text-ink focus:outline-none focus:border-red">
+          </div>
+          <div>
+            <label class="data-label block mb-1">Your School Name:</label>
+            <input type="text" id="login-school-input" placeholder="e.g. ALOHA Sylhet Branch" class="w-full bg-white border-2 rule thick p-3 text-sm text-ink focus:outline-none focus:border-red">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="data-label block mb-1">Age:</label>
+              <input type="number" id="login-age-input" placeholder="13" class="w-full bg-white border-2 rule thick p-3 text-sm text-ink focus:outline-none focus:border-red">
+            </div>
+            <div>
+              <label class="data-label block mb-1">Grade / Class:</label>
+              <input type="text" id="login-grade-input" placeholder="Class 7" class="w-full bg-white border-2 rule thick p-3 text-sm text-ink focus:outline-none focus:border-red">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p id="login-error-text" class="hidden text-[11px] text-red font-bold data-label"></p>
+
+      <button onclick="submitAuthForm()" id="auth-submit-btn" class="press w-full bg-red text-paper font-display text-sm uppercase py-4 hard-shadow-red border-2 rule thick tracking-wide">
+        Enter Workspace ▸
+      </button>
+      <p class="data-label text-[9px] text-center opacity-60">DATA STORED SERVER-SIDE · PASSWORDS ARE HASHED, NEVER STORED IN PLAIN TEXT</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOP TELEMETRY BAR ================= -->
+<header class="flex items-stretch border-b-2 rule thick shrink-0 z-30">
+  <div class="px-3 md:px-5 py-3 flex items-center gap-2 md:gap-3">
+    <span class="text-2xl">✦</span>
+    <div>
+      <h1 class="brand-mark text-base md:text-lg">ZOHAN<span style="font-weight:400;">workspace</span></h1>
+      <div class="data-label opacity-70 hidden sm:block">Your study space</div>
+    </div>
+  </div>
+  <div class="flex-1 flex items-center px-5 data-label opacity-80 gap-6 overflow-hidden hidden md:flex">
+    <span><span class="text-red rec-dot">●</span> LIVE SESSION</span>
+    <span id="header-clock-readout">00:00:00</span>
+    <span class="hidden lg:inline">UNIT: <span id="header-username-readout">—</span></span>
+  </div>
+  <div class="px-3 md:px-5 py-3 flex items-center gap-2 ml-auto md:ml-0">
+    <span class="data-label opacity-70 hidden sm:inline">WALLET</span>
+    <span class="data-num font-bold text-lg md:text-xl">🪙<span id="global-coin-count">250</span></span>
+  </div>
+</header>
+
+<div class="flex-1 flex overflow-hidden">
+  <!-- ================= NAV MANIFEST (SIDEBAR) ================= -->
+  <aside class="sidebar text-paper flex flex-col justify-between shrink-0 z-40">
+    <div>
+      <div class="sidebar-brand" title="ZOHANworkspace">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2z"/></svg>
+      </div>
+      <nav class="text-xs">
+        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-slot nav-active">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+          <span class="nav-label">Dashboard</span>
+        </button>
+        <button onclick="switchTab('workspace')" id="btn-workspace" class="nav-slot">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+          <span class="nav-label">Workspace</span>
+        </button>
+        <button onclick="switchTab('tutor')" id="btn-tutor" class="nav-slot">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.8 4.9L19 8.7l-4.9 1.8L12 15.4l-1.8-4.9L5 8.7l4.9-1.8L12 2z"/><path d="M19 15l.9 2.5L22 18.4l-2.1.9L19 22l-.9-2.5-2.1-.9 2.1-.9L19 15z"/></svg></span>
+          <span class="nav-label">AI Tutor</span>
+        </button>
+        <button onclick="switchTab('quiz')" id="btn-quiz" class="nav-slot">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="13" height="15" rx="2" transform="rotate(-8 10.5 13.5)"/><rect x="7" y="3" width="13" height="15" rx="2" fill="var(--paper)" fill-opacity="0.06"/></svg></span>
+          <span class="nav-label">Decks</span>
+        </button>
+        <button onclick="switchTab('planner')" id="btn-planner" class="nav-slot">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span>
+          <span class="nav-label">Planner</span>
+        </button>
+        <button onclick="switchTab('profile')" id="btn-profile" class="nav-slot">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1.6-3.6 5-5.5 7.5-5.5s5.9 1.9 7.5 5.5"/></svg></span>
+          <span class="nav-label">Account</span>
+        </button>
+      </nav>
+    </div>
+    <div class="sidebar-foot" title="Synced to cloud">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A5.5 5.5 0 0 1 17.3 8.1 4 4 0 0 1 17 18H7z"/></svg>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto p-4 md:p-8 relative canvas-bg">
+
+    <!-- ================= DASHBOARD ================= -->
+    <section id="tab-dashboard" class="tab-content space-y-5">
+      <div class="flex justify-between items-end border-b-2 rule thick pb-3">
+        <div>
+          <div class="data-label text-red">// 01 — OVERVIEW</div>
+          <h2 id="dashboard-welcome-banner" class="brand-mark text-3xl md:text-5xl uppercase">Welcome back.</h2>
+        </div>
+        <div class="data-label text-right hidden sm:block opacity-70">TODAY<br><span id="dash-date-readout" class="text-ink"></span></div>
+      </div>
+
+      <div id="dashboard-review-banner" class="hidden bg-red text-paper border-2 rule thick p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl rec-dot">⏰</span>
+          <div>
+            <div class="font-display text-sm uppercase" id="review-banner-title">0 cards ready</div>
+            <div class="data-label opacity-80">SPACED REVIEW QUEUE NON-EMPTY</div>
+          </div>
+        </div>
+        <button onclick="startReviewDueSession()" class="press bg-paper text-ink font-display text-xs uppercase px-4 py-2 border-2 border-paper shrink-0">Review Now</button>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 stagger">
+        <div class="xl:col-span-2 bg-white border-2 rule thick p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="data-label bracket">TOP REMINDERS</h3>
+              <button onclick="switchTab('planner')" class="data-label text-red hover:underline">ALL TASKS →</button>
+            </div>
+            <div id="dashboard-assignments-list" class="space-y-2"></div>
+          </div>
+          <div class="mt-4 pt-4 border-t-2 rule thick flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 flex items-center justify-center border-2 rule thick">
+                <span id="widget-1b-percentage" class="data-num text-sm font-bold">50%</span>
+              </div>
+              <div>
+                <h4 class="data-label">ON-TRACK INDEX</h4>
+                <p class="text-[11px] opacity-60">Derived from your most urgent task.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4 flex flex-col justify-between">
+          <div class="bg-white border-2 rule thick p-4 flex-1">
+            <div class="data-label opacity-60 mb-1">DAILY MOTIVATION</div>
+            <p id="motivational-quote-box" class="italic text-xs">"Review your weak questions once more to lock them in."</p>
+          </div>
+          <div class="bg-ink text-paper border-2 rule thick p-4 flex items-center justify-between">
+            <div>
+              <div class="data-label opacity-60 mb-0.5">SESSION TIMER</div>
+              <div id="session-stopwatch" class="data-num text-xl font-bold">00:00:00</div>
+            </div>
+            <span class="text-xl">⏳</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white border-2 rule thick p-5">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="data-label bracket" id="dashboard-mini-cal-label">QUICK CALENDAR</h3>
+          <span class="data-label opacity-50">TAP A DATE TO SCHEDULE</span>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center data-label mb-1">
+          <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+        </div>
+        <div id="dashboard-mini-calendar" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 stagger">
+        <div class="bg-white border-2 rule thick p-4">
+          <h3 class="data-label bracket mb-3">RECENT DECKS</h3>
+          <div id="widget-recent-decks" class="space-y-2"></div>
+        </div>
+        <div class="ai-rec-card bg-white border-2 rule thick p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="data-label bracket ai-rec-badge">✦ AI RECOMMENDATIONS</h3>
+              <button onclick="refreshAiRecommendation('dashboard')" id="ai-rec-refresh-dashboard" class="ai-rec-refresh" title="Get a fresh suggestion">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+              </button>
+            </div>
+            <p id="ai-recommendation-block" class="ai-rec-text text-xs leading-relaxed">Add tasks in your planner to get suggestions here.</p>
+          </div>
+          <button onclick="switchTab('quiz')" class="press mt-4 w-full bg-ink text-paper font-display text-xs uppercase py-2 border-2 rule thick">Go To Decks</button>
+        </div>
+        <div class="bg-white border-2 rule thick p-4">
+          <h3 class="data-label bracket mb-2">STICKY REMINDERS</h3>
+          <div id="widget-reminders-list" class="space-y-1.5 max-h-24 overflow-y-auto pr-1"></div>
+          <div class="mt-3 flex gap-2">
+            <input type="text" id="new-reminder-input" placeholder="Quick note..." class="flex-1 bg-paper border-2 rule thick px-3 py-1.5 text-xs">
+            <button onclick="addUserReminderElement()" class="press icon-badge-btn on-dark bg-red text-paper px-3 py-1.5 text-xs font-display border-2 rule thick"><span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="3.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>ADD</button>
+          </div>
+        </div>
+        <div class="bg-white border-2 rule thick p-4">
+          <h3 class="data-label bracket mb-2">SCRATCHPAD NOTE</h3>
+          <div class="overflow-x-auto"><table class="w-full text-left text-xs"><tbody id="quick-notes-tbody"></tbody></table></div>
+        </div>
+        <div class="bg-white border-2 rule thick p-4 md:col-span-2">
+          <h3 class="data-label bracket mb-2">SUBJECT GRADES</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead><tr class="border-b-2 rule thick data-label"><th class="pb-2">SUBJECT</th><th class="pb-2 text-right">OVERALL</th></tr></thead>
+              <tbody id="dashboard-grades-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= WORKSPACE ================= -->
+    <section id="tab-workspace" class="tab-content hidden h-[85vh] flex flex-col relative bg-paperDim border-2 rule thick p-3 overflow-hidden">
+      <div class="bg-white border-2 rule thick p-2 flex flex-wrap items-center justify-between mb-3 z-10 gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="data-label opacity-60 px-2">TOOLS:</span>
+          <button onclick="spawnFloatingWidgetWindow('pomodoro')" class="press bg-paper border-2 rule thick px-3 py-1.5 text-xs font-bold flex items-center gap-1.5">⏱ POMODORO</button>
+          <button onclick="spawnFloatingWidgetWindow('youtube')" class="press bg-paper border-2 rule thick px-3 py-1.5 text-xs font-bold flex items-center gap-1.5">▶ VIDEO</button>
+          <button onclick="spawnFloatingWidgetWindow('google')" class="press bg-paper border-2 rule thick px-3 py-1.5 text-xs font-bold flex items-center gap-1.5">⌕ SEARCH</button>
+          <button onclick="spawnFloatingWidgetWindow('sticky')" class="press bg-paper border-2 rule thick px-3 py-1.5 text-xs font-bold flex items-center gap-1.5">▤ NOTE</button>
+        </div>
+        <p class="data-label opacity-50 pr-2">DRAG BY THE HANDLE</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 overflow-hidden">
+        <div class="lg:col-span-2 bg-white border-2 rule thick p-4 relative flex flex-col justify-between overflow-hidden">
+          <div class="h-full flex flex-col overflow-hidden">
+            <div class="flex flex-col gap-2 border-b-2 rule thick pb-3 mb-3">
+              <input type="text" id="workspace-note-title" placeholder="UNTITLED STUDY SHEET..." class="bg-transparent font-display text-lg uppercase focus:outline-none w-full">
+              <div class="flex items-center justify-between bg-paper p-1.5 border-2 rule thick flex-wrap gap-1">
+                <div class="flex gap-1">
+                  <button onclick="formatCanvasText('bold')" title="Bold" class="press bg-white px-2.5 py-1 text-xs font-bold border-2 rule thick">B</button>
+                  <button onclick="formatCanvasText('italic')" title="Italic" class="press bg-white px-2.5 py-1 text-xs font-bold border-2 rule thick"><i>I</i></button>
+                  <button onclick="formatCanvasText('underline')" title="Underline" class="press bg-white px-2.5 py-1 text-xs font-bold border-2 rule thick"><u>U</u></button>
+                  <button onclick="formatCanvasText('heading')" title="Header" class="press bg-white px-2.5 py-1 text-xs font-bold border-2 rule thick">H</button>
+                  <button onclick="formatCanvasText('bullet')" title="Bullet List" class="press bg-white px-2.5 py-1 text-xs font-bold border-2 rule thick">•LIST</button>
+                </div>
+                <div class="flex items-center gap-2">
+                  <label class="press bg-paper text-ink text-[11px] font-bold px-2 py-1 border-2 rule thick cursor-pointer">
+                    🖼 INSERT
+                    <input type="file" id="workspace-photo-injector" accept="image/*" class="hidden" onchange="injectImageIntoWorkspaceNotes(event)">
+                  </label>
+                  <button onclick="saveCurrentWorkspaceDocFile()" class="press bg-red text-paper font-bold text-[11px] px-3 py-1 border-2 rule thick">💾 SAVE</button>
+                </div>
+              </div>
+            </div>
+            <textarea id="workspace-note-textarea" placeholder="Write your notes, paste reference text, or drop in anything you're studying..." class="w-full flex-1 bg-transparent border-0 resize-none text-xs leading-relaxed focus:outline-none focus:ring-0 overflow-y-auto font-body"></textarea>
+          </div>
+          <div class="border-t-2 rule thick pt-3 mt-3 flex items-center justify-between z-0 shrink-0">
+            <p class="data-label opacity-50">AUTO-SAVES TO CLOUD</p>
+            <button onclick="triggerWorkspaceMemorizationRedirection()" class="press bg-red text-paper font-display text-xs uppercase px-5 py-2.5 border-2 rule thick hard-shadow-red">
+              Turn Into Flashcards ▸
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white border-2 rule thick p-4 flex flex-col justify-between overflow-hidden">
+          <div class="flex flex-col h-full overflow-hidden">
+            <h3 class="data-label bracket mb-3">SAVED FILES</h3>
+            <div id="workspace-recent-files-box" class="space-y-2 flex-1 overflow-y-auto pr-1"></div>
+          </div>
+          <div class="mt-3 pt-3 border-t-2 rule thick data-label opacity-50">
+            SAVE A DOC, THEN BIND IT INTO A DECK.
+          </div>
+        </div>
+      </div>
+
+      <div id="widget-pomo" class="widget-window hidden w-64 bg-white border-2 rule thick hard-shadow left-10 top-24">
+        <div class="bg-ink text-paper px-3 py-2 flex items-center justify-between cursor-move handle">
+          <div class="data-label">⏱ FOCUS TIMER</div>
+          <button onclick="closeFloatingWidgetFrame('pomo')" class="hover:text-red font-bold text-xs">✕</button>
+        </div>
+        <div class="p-4 text-center space-y-3">
+          <span id="pomo-timer-display" class="data-num text-3xl font-bold block">25:00</span>
+          <button onclick="togglePomodoroTimerExecution()" id="pomo-control-btn" class="press w-full bg-ink text-paper text-xs py-1.5 font-bold border-2 rule thick">START TIMER</button>
+        </div>
+      </div>
+
+      <div id="widget-youtube" class="widget-window hidden w-80 bg-white border-2 rule thick hard-shadow left-20 top-40">
+        <div class="bg-ink text-paper px-3 py-2 flex items-center justify-between cursor-move handle">
+          <div class="data-label">▶ VIDEO NOTES</div>
+          <button onclick="closeFloatingWidgetFrame('youtube')" class="hover:text-red font-bold text-xs">✕</button>
+        </div>
+        <div class="p-3 bg-ink h-44 flex flex-col items-center justify-center text-center text-paper text-xs gap-2">
+          <div id="widget-yt-frame-container" class="w-full h-full hidden"></div>
+          <div id="widget-yt-placeholder-view" class="flex flex-col items-center gap-2">
+            <span class="text-2xl">▶</span>
+            <input type="text" id="widget-yt-url" placeholder="Paste a YouTube link..." class="w-11/12 bg-white/10 text-paper text-[11px] p-1.5 text-center border-0 focus:outline-none" onchange="updateWidgetYoutubeIFrameTarget()">
+            <p class="text-[10px] opacity-60 px-4">Keeps a video next to your notes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="widget-google" class="widget-window hidden w-80 bg-white border-2 rule thick hard-shadow left-40 top-32" style="height:380px;">
+        <div class="bg-ink text-paper px-3 py-2 flex items-center justify-between cursor-move handle">
+          <div class="data-label">⌕ QUICK SEARCH</div>
+          <button onclick="closeFloatingWidgetFrame('google')" class="hover:text-red font-bold text-xs">✕</button>
+        </div>
+        <div id="widget-google-body" class="p-3 space-y-2 flex flex-col" style="height: calc(100% - 40px);">
+          <div class="flex gap-1 shrink-0">
+            <input type="text" id="widget-google-query" onkeydown="if(event.key==='Enter'){event.preventDefault();launchWidgetGoogleSearch();}" placeholder="Search the web..." class="flex-1 bg-paper border-2 rule thick px-2 py-1 text-xs focus:outline-none">
+            <button onclick="launchWidgetGoogleSearch()" class="press bg-ink text-paper font-bold text-xs px-2.5 border-2 rule thick">GO</button>
+          </div>
+          <div id="widget-google-results" class="flex-1 overflow-y-auto space-y-1">
+            <div class="h-full border-2 border-dashed rule flex items-center justify-center text-[11px] italic opacity-70 text-center px-3">Results open right here — never a new tab.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="widget-sticky" class="widget-window hidden w-64 bg-white border-2 rule thick hard-shadow right-20 top-24">
+        <div class="bg-ink text-paper px-3 py-2 flex items-center justify-between cursor-move handle">
+          <div class="data-label">▤ QUICK NOTE</div>
+          <button onclick="closeFloatingWidgetFrame('sticky')" class="hover:text-red font-bold text-xs">✕</button>
+        </div>
+        <div class="p-2"><textarea placeholder="Jot down something quick..." class="w-full h-28 bg-yellow-100 text-xs p-2 border-0 resize-none focus:outline-none font-body"></textarea></div>
+      </div>
+    </section>
+
+    <!-- ================= AI TUTOR ================= -->
+    <section id="tab-tutor" class="tab-content hidden max-w-4xl mx-auto flex flex-col h-[75vh] bg-white border-2 rule thick overflow-hidden">
+      <div class="bg-ink text-paper p-4 flex items-center gap-3">
+        <div class="w-10 h-10 border-2 border-paper flex items-center justify-center font-display text-lg shrink-0">AI</div>
+        <div>
+          <h2 class="font-display text-base uppercase">AI Tutor</h2>
+          <p class="data-label opacity-60">Ask, paste notes, attach a photo, or build a deck.</p>
+        </div>
+      </div>
+
+      <div id="tutor-chat-stream" class="flex-1 overflow-y-auto p-6 space-y-4 bg-paperDim/40">
+        <div class="flex gap-3 max-w-[85%]">
+          <div class="w-8 h-8 bg-red text-paper border-2 rule thick flex items-center justify-center text-xs shrink-0 font-bold">AI</div>
+          <div class="bg-white border-2 rule thick p-4 text-xs leading-relaxed chat-markdown">
+            Hey! I'm your AI Tutor. Ask about your lessons, paste notes, attach a photo of your homework, or ask me to turn something into flashcards.
+          </div>
+        </div>
+      </div>
+
+      <div id="tutor-attachment-preview-row" class="hidden px-4 pt-3 flex gap-2 flex-wrap"></div>
+
+      <div class="p-4 bg-paper border-t-2 rule thick space-y-3">
+        <div class="flex gap-2 items-center text-xs">
+          <span class="data-label opacity-60">SAVE TO:</span>
+          <select id="tutor-deck-target-dropdown" class="bg-white border-2 rule thick px-2 py-1 focus:outline-none text-xs"></select>
+        </div>
+        <div class="flex gap-2 items-end">
+          <button onclick="document.getElementById('tutor-attachment-input').click()" title="Attach a photo" class="press bg-white border-2 rule thick px-3 py-3 text-sm shrink-0">📎</button>
+          <input type="file" id="tutor-attachment-input" accept="image/*" multiple class="hidden" onchange="handleTutorAttachmentInputChange(event)">
+          <textarea id="tutor-chat-textarea" onkeydown="handleTutorChatInputKeydownEvent(event)" rows="2" placeholder="Ask a question or paste your notes... (Enter to send)" class="flex-1 bg-white border-2 rule thick p-3 text-xs focus:outline-none resize-none font-body"></textarea>
+          <button onclick="executeLiveTutorChatCyclePipeline()" id="tutor-chat-send-btn" class="press bg-red text-paper font-display text-xs px-6 py-3 border-2 rule thick shrink-0">SEND ▸</button>
+        </div>
+        <div class="data-label opacity-50">MENTION "DECK" / "QUIZ" / "FLASHCARDS" TO GENERATE STUDY CARDS.</div>
+      </div>
+    </section>
+
+    <!-- ================= DECKS (Quiz) HOME ================= -->
+    <section id="tab-quiz" class="tab-content hidden space-y-5">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 stagger">
+        <button onclick="launchQuizSecondaryNavigationRoute('learn')" class="hard-shadow press bg-white border-2 rule thick p-5 text-left">
+          <div class="text-2xl mb-1">📖</div>
+          <div class="font-display text-sm uppercase">Learn</div>
+          <div class="text-[11px] opacity-60 mt-0.5">Go through every card once, no scoring pressure.</div>
+        </button>
+        <button onclick="launchQuizSecondaryNavigationRoute('memorize')" class="hard-shadow-red press bg-red text-paper border-2 rule thick p-5 text-left">
+          <div class="text-2xl mb-1">⚡</div>
+          <div class="font-display text-sm uppercase">Memorize</div>
+          <div class="text-[11px] opacity-90 mt-0.5">Fast recall rounds; weak answers return until nailed.</div>
+        </button>
+        <button onclick="launchQuizSecondaryNavigationRoute('review')" class="hard-shadow press bg-white border-2 rule thick p-5 text-left">
+          <div class="text-2xl mb-1">⏳</div>
+          <div class="font-display text-sm uppercase">Review</div>
+          <div id="review-cta-subtitle" class="text-[11px] opacity-60 mt-0.5">Mastered cards, resurfacing before you'd forget.</div>
+        </button>
+      </div>
+
+      <div class="bg-white border-2 rule thick p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="w-full md:w-1/2 relative">
+          <input type="text" id="deck-forgiving-search" oninput="renderDecksGridMatrixLayout()" placeholder="Search your decks..." class="w-full bg-paper border-2 rule thick pl-4 pr-10 py-2 text-xs focus:outline-none">
+          <span class="absolute right-3 top-2.5 text-xs opacity-50">⌕</span>
+        </div>
+        <button onclick="openDeckCreationWizard()" class="press icon-badge-btn on-dark w-full md:w-auto bg-ink text-paper font-display text-xs uppercase px-5 py-2.5 border-2 rule thick justify-center"><span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Create Deck</button>
+      </div>
+
+      <div class="bg-white border-2 rule thick p-4">
+        <div class="flex items-center justify-between border-b-2 rule thick pb-3 mb-4">
+          <div class="data-label bracket">ALL DECKS</div>
+          <span id="decks-count-badge" class="data-label border-2 rule thick px-3 py-1">0 DECKS</span>
+        </div>
+        <div id="decks-grid-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 pt-2"></div>
+      </div>
+    </section>
+
+    <!-- ================= DECK DETAIL SCREEN ================= -->
+    <section id="deck-detail-screen" class="hidden fixed inset-0 bg-paper z-50 overflow-y-auto p-4 md:p-8">
+      <div class="max-w-3xl mx-auto space-y-5 enter">
+        <div class="flex justify-between items-center border-b-2 rule thick pb-4">
+          <div>
+            <div class="data-label text-red">// DECK FILE</div>
+            <h2 id="deck-detail-name" class="font-display text-xl uppercase">Deck Name</h2>
+          </div>
+          <button onclick="closeDeckDetailScreen()" class="press icon-badge-btn data-label bg-white border-2 rule thick px-4 py-2"><span class="icon-inline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>BACK</button>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="bg-white border-2 rule thick p-3 text-center">
+            <div id="deck-stat-total" class="font-display text-lg">0</div>
+            <div class="data-label opacity-60">CARDS</div>
+          </div>
+          <div class="bg-white border-2 rule thick p-3 text-center">
+            <div id="deck-stat-mastered" class="font-display text-lg text-green">0</div>
+            <div class="data-label opacity-60">MASTERED</div>
+          </div>
+          <div class="bg-white border-2 rule thick p-3 text-center">
+            <div id="deck-stat-weak" class="font-display text-lg text-red">0</div>
+            <div class="data-label opacity-60">WEAK</div>
+          </div>
+          <div class="bg-white border-2 rule thick p-3 text-center">
+            <div id="deck-stat-due" class="font-display text-lg">0</div>
+            <div class="data-label opacity-60">DUE</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button onclick="startDeckLearnMode()" class="press hard-shadow bg-white border-2 rule thick p-5 text-left">
+            <div class="text-xl mb-1">📖</div>
+            <div class="font-display text-sm uppercase">Start Learning</div>
+            <div class="text-[11px] opacity-60">Walk through every card with explanations.</div>
+          </button>
+          <button onclick="startDeckMemorizeMode()" class="press hard-shadow-red bg-red text-paper border-2 rule thick p-5 text-left">
+            <div class="text-xl mb-1">⚡</div>
+            <div class="font-display text-sm uppercase">Start Memorizing</div>
+            <div class="text-[11px] opacity-90">30-card active recall rounds.</div>
+          </button>
+        </div>
+
+        <div class="bg-white border-2 rule thick p-5 space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="data-label bracket">SUBDECKS</h3>
+            <button onclick="openDeckCreationWizard(true)" class="icon-badge-btn data-label text-red hover:underline"><span class="icon-inline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>ADD SUBDECK</button>
+          </div>
+          <div id="deck-subdecks-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+        </div>
+
+        <div class="bg-white border-2 rule thick p-5 space-y-2">
+          <h3 class="data-label bracket mb-1">ALL CARDS</h3>
+          <div id="deck-cards-list" class="space-y-1.5 max-h-64 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= DECK CREATION WIZARD ================= -->
+    <div id="deck-wizard-overlay" class="hidden fixed inset-0 bg-ink/50 z-50 flex items-center justify-center p-4">
+      <div class="w-full max-w-xl bg-paper border-2 rule thick hard-shadow max-h-[90vh] overflow-y-auto enter">
+        <div class="p-5 border-b-2 rule thick flex items-center justify-between">
+          <h3 class="font-display text-base uppercase">Create A Deck</h3>
+          <div class="flex gap-1.5" id="wizard-step-dots">
+            <span class="step-dot active" data-step="1"></span><span class="step-dot" data-step="2"></span><span class="step-dot" data-step="3"></span><span class="step-dot" data-step="4"></span>
+          </div>
+        </div>
+        <div class="p-5 space-y-4">
+
+        <div id="wizard-step-1" class="wizard-step space-y-3">
+          <p class="data-label opacity-60">HOW DO YOU WANT TO BUILD THIS DECK?</p>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <button onclick="setWizardSourceMode('paste')" class="press wizard-source-btn border-2 rule thick p-4 hover:bg-white bg-white text-left">
+              <div class="text-xl mb-1">📋</div><div class="font-bold">Paste Notes</div>
+              <div class="text-[10px] opacity-60">Copy-paste text from anywhere</div>
+            </button>
+            <button onclick="setWizardSourceMode('image')" class="press wizard-source-btn border-2 rule thick p-4 hover:bg-white bg-white text-left">
+              <div class="text-xl mb-1">🖼</div><div class="font-bold">Upload Photos</div>
+              <div class="text-[10px] opacity-60">Pictures of notes or textbook page</div>
+            </button>
+            <button onclick="setWizardSourceMode('file')" class="press wizard-source-btn border-2 rule thick p-4 hover:bg-white bg-white text-left">
+              <div class="text-xl mb-1">📄</div><div class="font-bold">Upload A File</div>
+              <div class="text-[10px] opacity-60">.txt notes or transcript</div>
+            </button>
+            <button onclick="setWizardSourceMode('topic')" class="press wizard-source-btn border-2 rule thick p-4 hover:bg-white bg-white text-left">
+              <div class="text-xl mb-1">💡</div><div class="font-bold">Just A Topic</div>
+              <div class="text-[10px] opacity-60">Type a subject, AI builds it</div>
+            </button>
+          </div>
+        </div>
+
+        <div id="wizard-step-2" class="wizard-step hidden space-y-3">
+          <div id="wizard-input-paste" class="hidden">
+            <label class="data-label block mb-1">PASTE YOUR NOTES:</label>
+            <textarea id="wizard-paste-textarea" rows="8" placeholder="Paste any text — lecture notes, textbook paragraphs, a summary..." class="w-full bg-white border-2 rule thick p-3 text-xs resize-none focus:outline-none font-body"></textarea>
+          </div>
+          <div id="wizard-input-image" class="hidden">
+            <label class="data-label block mb-1">UPLOAD ONE OR MORE PHOTOS:</label>
+            <input type="file" accept="image/*" multiple id="wizard-image-input" onchange="handleWizardImageInputChange(event)" class="w-full text-xs">
+            <div id="wizard-image-preview-row" class="flex gap-2 flex-wrap mt-2"></div>
+          </div>
+          <div id="wizard-input-file" class="hidden">
+            <label class="data-label block mb-1">UPLOAD A .TXT FILE:</label>
+            <input type="file" accept=".txt,.md" id="wizard-file-input" onchange="handleWizardFileInputChange(event)" class="w-full text-xs">
+            <p id="wizard-file-status" class="data-label opacity-60 mt-1"></p>
+          </div>
+          <div id="wizard-input-topic" class="hidden">
+            <label class="data-label block mb-1">WHAT'S THE TOPIC?</label>
+            <input type="text" id="wizard-topic-input" placeholder="e.g. The Water Cycle, World War 1, Fractions..." class="w-full bg-white border-2 rule thick p-3 text-xs focus:outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="data-label block mb-1">DECK NAME:</label>
+              <input type="text" id="wizard-deck-name" placeholder="e.g. Chapter 1 Vocabulary" class="w-full bg-white border-2 rule thick p-2.5 text-xs focus:outline-none">
+            </div>
+            <div>
+              <label class="data-label block mb-1">PUT INSIDE:</label>
+              <select id="wizard-deck-parent" class="w-full bg-white border-2 rule thick p-2.5 text-xs focus:outline-none">
+                <option value="none">No parent (main deck)</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-between pt-2">
+            <button onclick="wizardGoToStep(1)" class="press data-label px-4 py-2 border-2 rule thick">← BACK</button>
+            <button onclick="executeWizardGenerationRequest()" class="press bg-red text-paper text-xs font-display uppercase px-5 py-2.5 border-2 rule thick">Generate Cards ▸</button>
+          </div>
+        </div>
+
+        <div id="wizard-step-3" class="wizard-step hidden py-10 text-center space-y-4">
+          <div class="text-3xl rec-dot inline-block">◆</div>
+          <p class="data-label">TURNING MATERIAL INTO FLASHCARDS...</p>
+          <div class="w-2/3 mx-auto h-2 border-2 rule thick hazard-stripe"></div>
+        </div>
+
+        <div id="wizard-step-4" class="wizard-step hidden space-y-3">
+          <div class="flex justify-between items-center">
+            <p class="data-label opacity-60">REVIEW — DELETE ANYTHING YOU DON'T WANT.</p>
+            <span id="wizard-card-count-badge" class="data-label border-2 rule thick px-2 py-1">0 CARDS</span>
+          </div>
+          <div id="wizard-cards-review-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+          <div class="flex justify-between pt-2">
+            <button onclick="wizardGoToStep(2)" class="press data-label px-4 py-2 border-2 rule thick">← BACK</button>
+            <div class="flex gap-2">
+              <button onclick="closeDeckCreationWizard()" class="press data-label px-4 py-2 border-2 rule thick">CANCEL</button>
+              <button onclick="finalizeWizardDeckSave()" class="press bg-red text-paper text-xs font-display uppercase px-5 py-2.5 border-2 rule thick">Save Deck ▸</button>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= LEARN MODE SCREEN ================= -->
+    <section id="learn-mode-screen" class="hidden fixed inset-0 bg-paper z-50 overflow-y-auto p-4 md:p-8">
+      <div class="max-w-2xl mx-auto space-y-5 enter">
+        <div class="flex justify-between items-center border-b-2 rule thick pb-4">
+          <h2 class="font-display text-xl uppercase">Learning: <span id="learn-mode-deck-name"></span></h2>
+          <button onclick="closeLearnFullscreenModule()" class="press data-label bg-white border-2 rule thick px-4 py-2">✕ CLOSE</button>
+        </div>
+        <div class="data-label opacity-60" id="learn-mode-progress-text">CARD 1 OF 1</div>
+        <div class="bg-white border-2 rule thick p-8 space-y-4">
+          <p id="learn-mode-question-text" class="text-base font-bold leading-relaxed"></p>
+          <div id="learn-mode-answer-block" class="hidden bg-paperDim border-2 rule thick p-4 text-xs leading-relaxed"></div>
+          <button onclick="revealLearnModeAnswer()" id="learn-mode-reveal-btn" class="press data-label bg-white border-2 rule thick px-4 py-2">SHOW ANSWER + EXPLANATION</button>
+        </div>
+        <div class="flex justify-between">
+          <button onclick="learnModeStepCard(-1)" class="press bg-white border-2 rule thick data-label px-5 py-2.5">← PREVIOUS</button>
+          <button onclick="learnModeStepCard(1)" class="press bg-ink text-paper border-2 rule thick data-label px-5 py-2.5">NEXT →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MEMORIZE / QUIZ PLAYER SCREEN ================= -->
+    <section id="quiz-player-screen" class="hidden fixed inset-0 bg-ink/60 z-50 flex items-center justify-center p-4">
+      <div class="w-full max-w-2xl bg-paper border-2 rule thick hard-shadow p-6 md:p-8 space-y-6 relative enter">
+        <div class="flex justify-between items-center">
+          <div>
+            <span id="quiz-player-deck-name" class="data-label border-2 rule thick px-3 py-1">DECK</span>
+            <span id="blitz-timer-badge" class="ml-2 data-num text-xs bg-ink text-paper px-2 py-0.5 font-bold">8.0s LEFT</span>
+          </div>
+          <button onclick="forceCloseQuizSessionLoop()" class="data-label hover:text-red font-bold">✕ CLOSE</button>
+        </div>
+
+        <div class="space-y-1">
+          <div class="flex justify-between data-label opacity-70">
+            <span id="quiz-progress-text">CARD 1 OF 10</span>
+            <span id="quiz-score-tracker">EARNED: +0 COINS</span>
+          </div>
+          <div class="w-full border-2 rule thick h-5 overflow-hidden progress-bar-labeled"><div id="quiz-progress-bar-fill" class="bg-red h-full transition-all duration-300" style="width: 0%"></div><span id="quiz-progress-bar-pct" class="bar-pct-label">0%</span></div>
+        </div>
+
+        <div class="bg-white border-2 rule thick p-6 min-h-[120px] flex items-center justify-center text-center">
+          <p id="quiz-active-question-text" class="text-sm font-bold leading-relaxed">Loading...</p>
+        </div>
+
+        <div id="quiz-choices-grid" class="grid grid-cols-1 gap-2.5"></div>
+
+        <div class="pt-4 border-t-2 rule thick flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div class="data-label opacity-50">ANSWER UNDER 3s FOR A COIN BONUS</div>
+          <button onclick="buyActiveQuestionExplanationPayload()" id="buy-explanation-btn" class="press data-label bg-white border-2 rule thick px-4 py-2">UNLOCK HINT (-20 COINS)</button>
+        </div>
+        <div id="quiz-explanation-drawer" class="hidden bg-paperDim border-2 rule thick p-4 text-xs leading-relaxed"></div>
+      </div>
+    </section>
+
+    <!-- ================= PLANNER ================= -->
+    <section id="tab-planner" class="tab-content hidden space-y-5">
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div class="xl:col-span-2 bg-white border-2 rule thick p-5">
+          <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+              <button onclick="navigatePlannerCalendar(-1)" class="press w-8 h-8 border-2 rule thick font-bold">‹</button>
+              <h3 id="planner-calendar-month-label" class="data-label w-32 text-center">MONTH</h3>
+              <button onclick="navigatePlannerCalendar(1)" class="press w-8 h-8 border-2 rule thick font-bold">›</button>
+            </div>
+            <span class="data-label opacity-50">TAP A DAY TO SCHEDULE</span>
+          </div>
+          <div class="grid grid-cols-7 gap-1 text-center data-label border-b-2 rule thick pb-2 mb-2">
+            <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+          </div>
+          <div id="calendar-grid-days-mesh" class="grid grid-cols-7 gap-2 min-h-[260px]"></div>
+        </div>
+
+        <div class="bg-white border-2 rule thick p-5 flex flex-col">
+          <h3 class="data-label bracket mb-3">ADD A TASK</h3>
+          <div class="space-y-2 text-xs mb-4">
+            <input type="text" id="planner-item-title" placeholder="e.g. Science Chapter 1 Exam" class="w-full bg-paper border-2 rule thick p-2.5 focus:outline-none">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="planner-item-type" list="planner-type-suggestions" placeholder="Type (Exam, HW...)" class="w-full bg-paper border-2 rule thick p-2.5 focus:outline-none">
+              <datalist id="planner-type-suggestions">
+                <option value="Exam"><option value="Test / Quiz"><option value="Homework"><option value="Revision"><option value="Custom Task">
+              </datalist>
+              <input type="date" id="planner-item-date" class="w-full bg-paper border-2 rule thick p-2.5 focus:outline-none">
+            </div>
+            <select id="planner-item-priority" class="w-full bg-paper border-2 rule thick p-2.5 focus:outline-none">
+              <option value="3">High / Urgent</option><option value="2" selected>Medium / Normal</option><option value="1">Low / Relaxed</option>
+            </select>
+            <button onclick="saveNewlyConfiguredPlannerNodeElement()" class="press icon-badge-btn on-dark w-full bg-red text-paper font-display text-xs uppercase py-2.5 border-2 rule thick justify-center"><span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Schedule Task</button>
+          </div>
+          <h3 class="data-label bracket mb-2">PENDING TASKS</h3>
+          <div id="planner-full-tasks-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+
+      <div class="ai-rec-card bg-white border-2 rule thick p-5">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="data-label bracket ai-rec-badge">✦ AI RECOMMENDATIONS</h3>
+          <button onclick="refreshAiRecommendation('planner')" id="ai-rec-refresh-planner" class="ai-rec-refresh" title="Get a fresh suggestion">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+          </button>
+        </div>
+        <p id="ai-recommendation-block-planner" class="ai-rec-text text-xs leading-relaxed">Add tasks and grades to get a personalized study plan here.</p>
+      </div>
+
+      <div class="bg-white border-2 rule thick p-5 space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="data-label bracket">GRADES — SPREADSHEET</h3>
+            <p class="text-[11px] opacity-70 mt-0.5">Set up subjects, weight each category, then log scores.</p>
+          </div>
+          <button onclick="addNewGradeSubjectRow()" class="press icon-badge-btn on-dark bg-ink text-paper text-xs font-display uppercase px-4 py-2 border-2 rule thick"><span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Add Subject</button>
+        </div>
+        <div id="grades-spreadsheet-container" class="space-y-4"></div>
+      </div>
+    </section>
+
+    <!-- ================= ACCOUNT ================= -->
+    <section id="tab-profile" class="tab-content hidden max-w-2xl mx-auto bg-white border-2 rule thick p-6 md:p-8 space-y-6">
+      <div>
+        <div class="data-label text-red">// 06 — ACCOUNT</div>
+        <h2 class="font-display text-xl uppercase">Account</h2>
+        <p class="text-[11px] opacity-60 mt-0.5">Login and profile — stored server-side, synced across devices.</p>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="grid grid-cols-1 gap-4 p-4 border-2 rule thick">
+          <div>
+            <label class="data-label block mb-1">Email:</label>
+            <input type="email" id="profile-email-input" disabled class="w-full bg-paperDim border-2 rule thick p-2.5 opacity-70">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="data-label block mb-1">Current Password:</label>
+              <input type="password" id="profile-current-password-input" placeholder="Enter to change" class="w-full bg-white border-2 rule thick p-2.5 focus:outline-none">
+            </div>
+            <div>
+              <label class="data-label block mb-1">New Password:</label>
+              <input type="password" id="profile-new-password-input" placeholder="Leave blank to keep" class="w-full bg-white border-2 rule thick p-2.5 focus:outline-none">
+            </div>
+          </div>
+          <button onclick="updateAccountLoginDetails()" class="press bg-ink text-paper font-display text-xs uppercase py-2 border-2 rule thick">Update Password</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="data-label block mb-1">Display Name:</label>
+            <input type="text" id="profile-name-input" class="w-full bg-paper border-2 rule thick p-2.5 focus:outline-none">
+          </div>
+          <div>
+            <label class="data-label block mb-1">School:</label>
+            <input type="text" id="profile-school-input" class="w-full bg-paper border-2 rule thick p-2.5 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="data-label block mb-1">Age:</label>
+            <input type="number" id="profile-age-input" class="w-full bg-paper border-2 rule thick p-2.5 focus:outline-none">
+          </div>
+          <div>
+            <label class="data-label block mb-1">Grade:</label>
+            <input type="text" id="profile-grade-input" class="w-full bg-paper border-2 rule thick p-2.5 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t-2 rule thick flex justify-between items-center flex-wrap gap-2">
+          <button onclick="signOutOfWorkspace()" class="press data-label border-2 rule thick text-red px-4 py-2">SIGN OUT</button>
+          <button onclick="saveUserProfileSettingsState()" class="press bg-red text-paper font-display text-xs uppercase px-6 py-2.5 border-2 rule thick">Save Changes</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ================= AI QUICK-ASK FLOATING WIDGET (global) ================= -->
+<button onclick="toggleAiQuickPanel()" class="ai-fab" id="ai-fab-btn" title="Ask AI Tutor a quick question">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.8 4.9L19 8.7l-4.9 1.8L12 15.4l-1.8-4.9L5 8.7l4.9-1.8L12 2z"/></svg>
+</button>
+<div id="ai-quick-panel" class="ai-quick-panel hidden">
+  <div class="bg-ink text-paper px-4 py-2.5 flex items-center justify-between cursor-default">
+    <div class="data-label opacity-90">✦ QUICK ASK</div>
+    <button onclick="toggleAiQuickPanel(false)" class="hover:text-red font-bold text-xs">✕</button>
+  </div>
+  <div id="ai-quick-stream" class="ai-quick-stream">
+    <div class="ai-quick-bubble">Quick question? Ask here without leaving whatever you're doing.</div>
+  </div>
+  <div class="p-2.5 border-t-2 rule thick flex gap-1.5">
+    <input type="text" id="ai-quick-input" onkeydown="if(event.key==='Enter'){event.preventDefault();sendAiQuickQuestion();}" placeholder="Ask anything..." class="flex-1 bg-paper border-2 rule thick px-2.5 py-2 text-xs focus:outline-none">
+    <button onclick="sendAiQuickQuestion()" class="press bg-red text-paper font-display text-xs px-3 border-2 rule thick">▸</button>
+  </div>
+</div>
+
+<script>
+  // ================= AUDIO / HAPTIC FEEDBACK =================
+  const soundfx = (() => {
+    let ctx = null;
+    function ensureCtx() { if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = null; } } return ctx; }
+    function tone(freq, duration, type, gainPeak, when) {
+      const c = ensureCtx(); if (!c) return;
+      if (c.state === 'suspended') c.resume();
+      const osc = c.createOscillator(); const gain = c.createGain();
+      osc.type = type || 'sine'; osc.frequency.value = freq;
+      const t0 = c.currentTime + (when || 0);
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(gainPeak || 0.08, t0 + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(t0); osc.stop(t0 + duration + 0.02);
+    }
+    return {
+      hover: () => tone(720, 0.05, 'sine', 0.03),
+      click: () => { tone(480, 0.07, 'triangle', 0.07); vibrate(8); },
+      success: () => { tone(660, 0.09, 'sine', 0.08); tone(880, 0.12, 'sine', 0.07, 0.08); vibrate([8, 30, 14]); },
+      error: () => { tone(180, 0.16, 'sawtooth', 0.06); vibrate(28); },
+      coin: () => { tone(988, 0.07, 'square', 0.05); tone(1318, 0.1, 'square', 0.05, 0.06); vibrate(12); },
+      tab: () => tone(560, 0.06, 'sine', 0.05)
+    };
+    function vibrate(pattern) { if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} } }
+  })();
+
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target.closest('.press, .nav-slot, .ai-rec-refresh, .sidebar-brand');
+    if (target && !target.dataset.sfxHovered) { soundfx.hover(); }
+  });
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('button, .nav-slot');
+    if (target) soundfx.click();
+  }, true);
+
+  // Ripple-on-click for any .press control — small, satisfying, GPU-cheap.
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('.press');
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 1.6;
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple-el';
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    const prevPosition = getComputedStyle(target).position;
+    if (prevPosition === 'static') target.style.position = 'relative';
+    target.classList.add('ripple-surface');
+    target.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 650);
+  });
+
+  // A little floating "+coins" pop over the wallet readout when it goes up.
+  let lastSeenWalletBalanceForFx = null;
+  function popCoinFxOverWallet(delta) {
+    const anchor = document.getElementById('global-coin-count');
+    if (!anchor || delta <= 0) return;
+    const pop = document.createElement('span');
+    pop.className = 'coin-pop';
+    pop.innerText = '+' + delta + ' 🪙';
+    pop.style.left = '0px'; pop.style.top = '-4px';
+    const wrapper = anchor.parentElement;
+    if (getComputedStyle(wrapper).position === 'static') wrapper.style.position = 'relative';
+    wrapper.appendChild(pop);
+    setTimeout(() => pop.remove(), 850);
+  }
+
+  function toggleAiQuickPanel(force) {
+    const panel = document.getElementById('ai-quick-panel');
+    const show = force !== undefined ? force : panel.classList.contains('hidden');
+    panel.classList.toggle('hidden', !show);
+    if (show) document.getElementById('ai-quick-input').focus();
+  }
+  async function sendAiQuickQuestion() {
+    const input = document.getElementById('ai-quick-input');
+    const q = input.value.trim();
+    if (!q) return;
+    const stream = document.getElementById('ai-quick-stream');
+    const meBubble = document.createElement('div'); meBubble.className = 'ai-quick-bubble me'; meBubble.innerText = q;
+    stream.appendChild(meBubble);
+    input.value = '';
+    const loading = document.createElement('div'); loading.className = 'ai-quick-bubble'; loading.innerHTML = `<span class="ai-rec-loading-dot"></span> <span class="ai-rec-loading-dot"></span> <span class="ai-rec-loading-dot"></span>`;
+    stream.appendChild(loading);
+    stream.scrollTop = stream.scrollHeight;
+    try {
+      const { text } = await callServerAI({
+        systemPrompt: "You are a quick-answer study helper embedded in a floating widget. Answer in 2-4 short sentences max, plain text, simple everyday words, no markdown.",
+        message: q
+      });
+      loading.innerText = text;
+      soundfx.success();
+    } catch (err) {
+      loading.innerText = "⚠ " + err.message;
+      soundfx.error();
+    }
+    stream.scrollTop = stream.scrollHeight;
+  }
+
+  // ================= AI RECOMMENDATIONS (dashboard + planner) =================
+  async function refreshAiRecommendation(location) {
+    const targetId = location === 'planner' ? 'ai-recommendation-block-planner' : 'ai-recommendation-block';
+    const btnId = location === 'planner' ? 'ai-rec-refresh-planner' : 'ai-rec-refresh-dashboard';
+    const textNode = document.getElementById(targetId);
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.add('spinning');
+    const prevText = textNode.innerHTML;
+    textNode.innerHTML = `<span class="ai-rec-loading-dot"></span> <span class="ai-rec-loading-dot"></span> <span class="ai-rec-loading-dot"></span>`;
+
+    const taskSummary = systemAssignments.slice(0, 8).map(t => `${t.title} (due ${t.date}, priority ${t.priorityScore})`).join('; ') || 'no tasks scheduled';
+    const deckSummary = systemDecks.slice(0, 8).map(d => `${d.name} (${d.items.length} cards, ${d.items.filter(i=>i.mastered).length} mastered)`).join('; ') || 'no decks yet';
+    const gradeSummary = systemSubjects.slice(0, 6).map(s => s.name).join(', ') || 'no subjects set up';
+
+    try {
+      const { text } = await callServerAI({
+        systemPrompt: "You are a study coach inside a student's dashboard. Given their tasks, decks, and subjects, give ONE short, specific, encouraging recommendation on what to study next. 1-2 sentences, plain text, no markdown, no preamble.",
+        message: `Tasks: ${taskSummary}\nDecks: ${deckSummary}\nSubjects: ${gradeSummary}`
+      });
+      textNode.innerText = text.trim();
+      soundfx.success();
+    } catch (err) {
+      textNode.innerHTML = prevText;
+      soundfx.error();
+    }
+    if (btn) btn.classList.remove('spinning');
+  }
+
+  // ================= INLINE WEB SEARCH (no new tab) =================
+  async function launchWidgetGoogleSearch() {
+    const q = document.getElementById('widget-google-query').value.trim();
+    const resultsBox = document.getElementById('widget-google-results');
+    if (!q) return;
+    resultsBox.innerHTML = `<div class="h-full flex items-center justify-center text-[11px] italic opacity-70">Searching…</div>`;
+    try {
+      const { results } = await apiRequest('/api/search?q=' + encodeURIComponent(q));
+      if (!results || results.length === 0) {
+        resultsBox.innerHTML = `<div class="h-full flex items-center justify-center text-[11px] italic opacity-70 text-center px-3">No inline results. Try a different phrase.</div>`;
+        return;
+      }
+      resultsBox.innerHTML = results.map((r, idx) => `
+        <div class="search-result-row" onclick="openInlineSearchResult(${idx})">
+          <div class="search-result-title">${r.title}</div>
+          <div class="search-result-url">${r.displayUrl}</div>
+          <div class="search-result-snippet">${r.snippet || ''}</div>
+        </div>`).join('');
+      window._lastSearchResults = results;
+    } catch (err) {
+      resultsBox.innerHTML = `<div class="h-full flex items-center justify-center text-[11px] italic opacity-70 text-center px-3">Search unavailable right now.</div>`;
+    }
+  }
+  function openInlineSearchResult(idx) {
+    const r = (window._lastSearchResults || [])[idx];
+    if (!r) return;
+    const resultsBox = document.getElementById('widget-google-results');
+    resultsBox.innerHTML = `
+      <div class="flex items-center justify-between mb-1">
+        <button onclick="launchWidgetGoogleSearch()" class="press data-label border-2 rule thick px-2 py-1 icon-badge-btn"><span class="icon-inline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>RESULTS</button>
+        <span class="data-label opacity-60 truncate">${r.displayUrl}</span>
+        <a href="${r.url}" target="_blank" rel="noopener" class="data-label opacity-60 hover:opacity-100 hover:text-red shrink-0 ml-2" title="If a site refuses to embed, open it externally">↗</a>
+      </div>
+      <iframe src="${r.url}" class="search-inline-viewer" style="height: calc(100% - 26px);"></iframe>`;
+  }
+</script>
+
+<script>
+  // ================= API CLIENT (auth + state + AI, all server-side now) =================
+  const API_BASE = ''; // same-origin
+  function getAuthToken() { return localStorage.getItem('zohan_jwt'); }
+  function setAuthToken(t) { if (t) localStorage.setItem('zohan_jwt', t); else localStorage.removeItem('zohan_jwt'); }
+
+  async function apiRequest(path, { method = 'GET', body } = {}) {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = getAuthToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    return data;
+  }
+
+  // ================= STATE =================
+  function mkItem(type, question, choices, correctIndex, explanation, answer, sequence) {
+    return {
+      id: 'item-' + Math.random().toString(36).slice(2, 10),
+      type, question,
+      choices: choices || null,
+      correctIndex: (correctIndex === undefined ? null : correctIndex),
+      answer: answer || null,
+      sequence: sequence || null,
+      explanation: explanation || '',
+      correctStreak: 0,
+      weakCount: 0,
+      mastered: false,
+      nextReviewAt: null,
+      masteredCycles: 0
+    };
+  }
+
+  const APP_TODAY = new Date();
+  function isoDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+  let systemDecks = [];
+  let systemAssignments = [];
+  let systemSubjects = [];
+  let systemReminders = [];
+  let workspaceFiles = [];
+  let walletBalance = 250;
+  let applicationStopwatchSeconds = 0;
+  let currentOpenTab = 'dashboard';
+  let plannerCalendarViewDate = new Date(APP_TODAY.getFullYear(), APP_TODAY.getMonth(), 1);
+  let currentUserProfile = null;
+  let stateSaveDebounceHandle = null;
+
+  function seedDefaultDecksIfEmpty() {
+    if (systemDecks.length > 0) return;
+    systemDecks = [
+      {
+        id: 'deck-demo-1', name: 'Science Core Lessons', parent: 'none',
+        items: [
+          mkItem('mcq', "Which part of a plant cell forms a rigid outer layer?", ["Cell Membrane", "Cell Wall", "Cytoplasm", "Vacuole"], 1, "Plant cell walls are made of cellulose and give the cell support."),
+          mkItem('mcq', "Which organelle is the main site of energy (ATP) production?", ["Ribosome", "Mitochondria", "Nucleus", "Lysosome"], 1, "Mitochondria are often called the powerhouse of the cell."),
+          mkItem('fill', "The cell part that controls what enters and leaves the cell is called the cell ____.", null, null, "The cell membrane controls what goes in and out.", "membrane")
+        ]
+      }
+    ];
+  }
+
+  // Debounced sync to the backend so we're not firing a request on every keystroke.
+  function saveStateInventoriesToCaches() {
+    if (stateSaveDebounceHandle) clearTimeout(stateSaveDebounceHandle);
+    stateSaveDebounceHandle = setTimeout(async () => {
+      try {
+        await apiRequest('/api/state', { method: 'PUT', body: { state: {
+          decks: systemDecks, tasks: systemAssignments, subjects: systemSubjects,
+          reminders: systemReminders, workspaceFiles, coins: walletBalance
+        } } });
+      } catch (e) { console.warn('Cloud save failed (will retry on next change):', e.message); }
+    }, 500);
+  }
+  function saveWorkspaceFilesToCaches() { saveStateInventoriesToCaches(); }
+
+  async function loadStateFromServer() {
+    const { state } = await apiRequest('/api/state');
+    systemDecks = state.decks || [];
+    systemAssignments = state.tasks || [];
+    systemSubjects = state.subjects || [];
+    systemReminders = state.reminders || [];
+    workspaceFiles = state.workspaceFiles || [];
+    walletBalance = typeof state.coins === 'number' ? state.coins : 250;
+    seedDefaultDecksIfEmpty();
+  }
+
+  // ================= HELPERS: due / mastery math =================
+  function getAllItemsFlat() {
+    let all = [];
+    systemDecks.forEach(d => d.items.forEach(it => all.push({ item: it, deckId: d.id, deckName: d.name })));
+    return all;
+  }
+  function getDueReviewItems() {
+    const now = Date.now();
+    return getAllItemsFlat().filter(x => x.item.mastered && x.item.nextReviewAt && x.item.nextReviewAt <= now);
+  }
+  function scheduleNextReview(item) {
+    const intervalsDays = [1, 3, 7, 16, 30];
+    const stage = Math.min(item.masteredCycles || 0, intervalsDays.length - 1);
+    item.nextReviewAt = Date.now() + intervalsDays[stage] * 24 * 60 * 60 * 1000;
+    item.masteredCycles = (item.masteredCycles || 0) + 1;
+  }
+
+  // ================= AUTH WALL =================
+  let authMode = 'login';
+  function setAuthMode(mode) {
+    authMode = mode;
+    document.getElementById('signup-only-fields').classList.toggle('hidden', mode !== 'signup');
+    document.getElementById('auth-tab-login').className = `flex-1 py-2 ${mode === 'login' ? 'bg-ink text-paper' : ''}`;
+    document.getElementById('auth-tab-signup').className = `flex-1 py-2 ${mode === 'signup' ? 'bg-ink text-paper' : ''}`;
+    document.getElementById('auth-submit-btn').innerText = mode === 'login' ? 'Enter Workspace ▸' : 'Create Account ▸';
+    document.getElementById('login-error-text').classList.add('hidden');
+  }
+
+  async function submitAuthForm() {
+    const errorNode = document.getElementById('login-error-text');
+    try {
+      const email = document.getElementById('login-email-input').value.trim();
+      const password = document.getElementById('login-password-input').value;
+      errorNode.classList.add('hidden');
+
+      if (!email || !password) { errorNode.innerText = "Email and password are required."; errorNode.classList.remove('hidden'); return; }
+      if (!email.includes('@')) { errorNode.innerText = "Please enter a valid email address."; errorNode.classList.remove('hidden'); return; }
+
+      let result;
+      if (authMode === 'signup') {
+        const name = document.getElementById('login-name-input').value.trim();
+        const school = document.getElementById('login-school-input').value.trim();
+        const age = document.getElementById('login-age-input').value.trim();
+        const grade = document.getElementById('login-grade-input').value.trim();
+        if (!name || !school || !age || !grade) { errorNode.innerText = "Please fill in every field."; errorNode.classList.remove('hidden'); return; }
+        result = await apiRequest('/api/auth/signup', { method: 'POST', body: { email, password, name, school, age, grade } });
+      } else {
+        result = await apiRequest('/api/auth/login', { method: 'POST', body: { email, password } });
+      }
+      setAuthToken(result.token);
+      currentUserProfile = result.user;
+      await enterWorkspaceAfterAuth();
+    } catch (err) {
+      console.error('submitAuthForm failed:', err);
+      if (errorNode) {
+        errorNode.innerText = (err && err.message) ? err.message : 'Something went wrong. Check the browser console (F12) for details.';
+        errorNode.classList.remove('hidden');
+      } else {
+        alert('Login failed: ' + (err && err.message ? err.message : err));
+      }
+    }
+  }
+
+  // Surface any uncaught error on-screen instead of failing silently while the login wall is up.
+  window.addEventListener('error', (e) => {
+    const errorNode = document.getElementById('login-error-text');
+    const wall = document.getElementById('login-wall-overlay');
+    if (errorNode && wall && !wall.classList.contains('hidden')) {
+      errorNode.innerText = 'Script error: ' + e.message;
+      errorNode.classList.remove('hidden');
+    }
+    console.error('Uncaught error:', e.error || e.message);
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    const errorNode = document.getElementById('login-error-text');
+    const wall = document.getElementById('login-wall-overlay');
+    if (errorNode && wall && !wall.classList.contains('hidden')) {
+      errorNode.innerText = 'Error: ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
+      errorNode.classList.remove('hidden');
+    }
+    console.error('Unhandled rejection:', e.reason);
+  });
+
+  async function enterWorkspaceAfterAuth() {
+    await loadStateFromServer();
+    document.getElementById('login-wall-overlay').classList.add('hidden');
+    document.getElementById('dashboard-welcome-banner').innerText = `Welcome back, ${currentUserProfile.name}.`;
+    document.getElementById('header-username-readout').innerText = currentUserProfile.name.toUpperCase();
+    syncProfileFieldsFromStorage();
+    renderDashboardInterfacePipelineMetrics();
+    updateGlobalCoinBalanceDisplayNode(false);
+  }
+
+  function signOutOfWorkspace() {
+    if (!confirm("Sign out of this workspace?")) return;
+    setAuthToken(null);
+    location.reload();
+  }
+
+  function syncProfileFieldsFromStorage() {
+    document.getElementById('profile-name-input').value = currentUserProfile.name || '';
+    document.getElementById('profile-school-input').value = currentUserProfile.school || '';
+    document.getElementById('profile-age-input').value = currentUserProfile.age || '';
+    document.getElementById('profile-grade-input').value = currentUserProfile.grade || '';
+    document.getElementById('profile-email-input').value = currentUserProfile.email || '';
+  }
+
+  async function updateAccountLoginDetails() {
+    const currentPass = document.getElementById('profile-current-password-input').value;
+    const newPass = document.getElementById('profile-new-password-input').value;
+    if (!newPass) return alert("Enter a new password to change it.");
+    try {
+      await apiRequest('/api/me/password', { method: 'PUT', body: { currentPassword: currentPass, newPassword: newPass } });
+      document.getElementById('profile-current-password-input').value = '';
+      document.getElementById('profile-new-password-input').value = '';
+      alert("Password updated.");
+    } catch (err) { alert(err.message); }
+  }
+
+  // ================= NAVIGATION =================
+  function switchTab(targetTabId) {
+    currentOpenTab = targetTabId;
+    if (typeof soundfx !== 'undefined') soundfx.tab();
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    const activeElement = document.getElementById(`tab-${targetTabId}`);
+    if (activeElement) {
+      activeElement.classList.remove('hidden');
+      activeElement.classList.remove('active-enter');
+      void activeElement.offsetWidth;
+      activeElement.classList.add('active-enter');
+    }
+    document.querySelectorAll('.nav-slot').forEach(btn => btn.classList.remove('nav-active'));
+    const targetedBtn = document.getElementById(`btn-${targetTabId}`);
+    if (targetedBtn) targetedBtn.classList.add('nav-active');
+
+    if (targetTabId === 'dashboard') renderDashboardInterfacePipelineMetrics();
+    else if (targetTabId === 'quiz') { renderDecksGridMatrixLayout(); populateTutorTargetDropdownSelect(); updateReviewCtaSubtitle(); }
+    else if (targetTabId === 'tutor') populateTutorTargetDropdownSelect();
+    else if (targetTabId === 'planner') renderPlannerInterfaceCoreLayoutComponents();
+  }
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('dash-date-readout').innerText = APP_TODAY.toDateString();
+    document.getElementById('planner-item-date').value = isoDate(APP_TODAY);
+
+    setInterval(() => {
+      applicationStopwatchSeconds++;
+      const hrs = String(Math.floor(applicationStopwatchSeconds / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((applicationStopwatchSeconds % 3600) / 60)).padStart(2, '0');
+      const secs = String(applicationStopwatchSeconds % 60).padStart(2, '0');
+      const watchNode = document.getElementById('session-stopwatch');
+      if (watchNode) watchNode.innerText = `${hrs}:${mins}:${secs}`;
+      const clockNode = document.getElementById('header-clock-readout');
+      if (clockNode) clockNode.innerText = new Date().toLocaleTimeString();
+    }, 1000);
+
+    setupFloatingDraggableMouseHandlersMeshSystem();
+
+    if (getAuthToken()) {
+      try {
+        const { user } = await apiRequest('/api/me');
+        currentUserProfile = user;
+        await enterWorkspaceAfterAuth();
+        return;
+      } catch (e) { setAuthToken(null); }
+    }
+    // Not signed in: leave the auth wall visible.
+  });
+
+  function updateGlobalCoinBalanceDisplayNode(animate) {
+    const node = document.getElementById('global-coin-count');
+    const prevVal = parseInt(node.innerText) || 0;
+    node.innerText = walletBalance;
+    if (animate && typeof soundfx !== 'undefined') {
+      soundfx.coin();
+      if (typeof popCoinFxOverWallet === 'function') popCoinFxOverWallet(walletBalance - prevVal);
+    }
+    saveStateInventoriesToCaches();
+  }
+
+  // ================= DASHBOARD =================
+  function computeTaskUrgency(task) {
+    const taskDate = new Date(task.date + 'T00:00:00');
+    const daysLeft = Math.round((taskDate - APP_TODAY) / 86400000);
+    let deadlineWeight = 0;
+    if (daysLeft <= 0) deadlineWeight = 3;
+    else if (daysLeft <= 2) deadlineWeight = 2;
+    else if (daysLeft <= 4) deadlineWeight = 1;
+    return { daysLeft, calculationYield: (parseInt(task.priorityScore) || 1) + deadlineWeight };
+  }
+
+  function renderDashboardInterfacePipelineMetrics() {
+    const tasksWithCalculatedScores = systemAssignments.map(task => ({ ...task, ...computeTaskUrgency(task) }));
+    tasksWithCalculatedScores.sort((a, b) => b.calculationYield - a.calculationYield);
+
+    const agendaListContainer = document.getElementById('dashboard-assignments-list');
+    agendaListContainer.innerHTML = '';
+    if (tasksWithCalculatedScores.length === 0) {
+      agendaListContainer.innerHTML = `<div class="text-xs opacity-50 italic">No tasks yet. Add some in the planner.</div>`;
+      document.getElementById('widget-1b-percentage').innerText = "0%";
+      document.getElementById('ai-recommendation-block').innerText = "All clear! You're on top of your schedule today.";
+    } else {
+      tasksWithCalculatedScores.slice(0, 3).forEach(task => {
+        let badgeClass = 'border-ink';
+        if (task.priorityScore == 2) badgeClass = 'border-ink';
+        if (task.priorityScore == 3) badgeClass = 'border-red text-red';
+        const itemNode = document.createElement('div');
+        itemNode.className = "flex items-center justify-between p-2.5 border-2 rule thick text-xs";
+        let dueLabel = task.daysLeft < 0 ? `⚠ ${Math.abs(task.daysLeft)}D OVERDUE` : (task.daysLeft === 0 ? '‼ DUE TODAY' : `${task.daysLeft}D LEFT`);
+        itemNode.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 border-2 ${badgeClass} data-label">SCORE ${task.calculationYield}</span>
+            <span class="font-bold">${task.title}</span>
+          </div>
+          <span class="data-num opacity-70 font-bold">${dueLabel}</span>`;
+        agendaListContainer.appendChild(itemNode);
+      });
+      const coreTopTaskNode = tasksWithCalculatedScores[0];
+      let calculatedMasteryYield = Math.min(100, Math.max(15, (coreTopTaskNode.calculationYield * 14)));
+      document.getElementById('widget-1b-percentage').innerText = `${calculatedMasteryYield}%`;
+      document.getElementById('ai-recommendation-block').innerHTML = `⚠ <strong>Heads up:</strong> "${coreTopTaskNode.title}" is your most urgent item. Open a deck and start memorizing to get ahead of it.`;
+    }
+
+    const recentDecksContainer = document.getElementById('widget-recent-decks');
+    recentDecksContainer.innerHTML = '';
+    systemDecks.slice(0, 3).forEach(deck => {
+      const rowNode = document.createElement('button');
+      rowNode.onclick = () => { switchTab('quiz'); };
+      rowNode.className = "press w-full text-left p-2 border-2 rule thick flex justify-between items-center text-xs";
+      rowNode.innerHTML = `<span class="font-bold">📂 ${deck.name}</span><span class="data-num opacity-60">${deck.items.length} cards</span>`;
+      recentDecksContainer.appendChild(rowNode);
+    });
+
+    renderDashboardRemindersListElements();
+
+    const quickNotesTbody = document.getElementById('quick-notes-tbody');
+    quickNotesTbody.innerHTML = '';
+    const cachedNoteTitle = document.getElementById('workspace-note-title') ? (document.getElementById('workspace-note-title').value || 'Untitled Study Sheet') : 'Untitled Study Sheet';
+    const rowNoteElement = document.createElement('tr');
+    rowNoteElement.className = "border-b hairline rule cursor-pointer";
+    rowNoteElement.onclick = () => { switchTab('workspace'); };
+    rowNoteElement.innerHTML = `<td class="py-2 font-bold text-red">📝 ${cachedNoteTitle}</td><td class="py-2 text-right data-num opacity-60">SYNCED</td>`;
+    quickNotesTbody.appendChild(rowNoteElement);
+
+    const gradesTbody = document.getElementById('dashboard-grades-tbody');
+    gradesTbody.innerHTML = '';
+    if (systemSubjects.length === 0) {
+      gradesTbody.innerHTML = `<tr><td colspan="2" class="py-2 text-center opacity-50 italic text-xs">No subjects set up yet.</td></tr>`;
+    } else {
+      systemSubjects.slice(0, 4).forEach(subj => {
+        const pct = computeSubjectOverallPercentage(subj);
+        const trNode = document.createElement('tr');
+        trNode.className = "border-b hairline rule text-xs";
+        trNode.innerHTML = `<td class="py-2 font-bold">${subj.name}</td><td class="py-2 text-right data-num font-bold text-red">${pct === null ? '—' : pct.toFixed(1) + '%'}</td>`;
+        gradesTbody.appendChild(trNode);
+      });
+    }
+
+    const dueItems = getDueReviewItems();
+    const banner = document.getElementById('dashboard-review-banner');
+    if (dueItems.length > 0) {
+      banner.classList.remove('hidden');
+      document.getElementById('review-banner-title').innerText = `${dueItems.length} card${dueItems.length === 1 ? '' : 's'} ready`;
+    } else {
+      banner.classList.add('hidden');
+    }
+
+    renderMiniDashboardCalendar();
+  }
+
+  function renderDashboardRemindersListElements() {
+    const remindersListContainer = document.getElementById('widget-reminders-list');
+    remindersListContainer.innerHTML = '';
+    systemReminders.forEach((reminder, idx) => {
+      const elementNode = document.createElement('div');
+      elementNode.className = "flex items-center justify-between text-xs border-2 rule thick px-2 py-1 group";
+      elementNode.innerHTML = `<span class="truncate pr-1">▤ ${reminder}</span><button onclick="removeUserReminderElement(${idx})" class="opacity-50 hover:text-red hover:opacity-100 font-bold">✕</button>`;
+      remindersListContainer.appendChild(elementNode);
+    });
+  }
+  function addUserReminderElement() {
+    const inputNode = document.getElementById('new-reminder-input');
+    const reminderVal = inputNode.value.trim();
+    if (!reminderVal) return;
+    systemReminders.push(reminderVal);
+    saveStateInventoriesToCaches();
+    inputNode.value = '';
+    renderDashboardRemindersListElements();
+  }
+  function removeUserReminderElement(index) {
+    systemReminders.splice(index, 1);
+    saveStateInventoriesToCaches();
+    renderDashboardRemindersListElements();
+  }
+
+  function renderMiniDashboardCalendar() {
+    const container = document.getElementById('dashboard-mini-calendar');
+    const labelNode = document.getElementById('dashboard-mini-cal-label');
+    if (!container) return;
+    container.innerHTML = '';
+    const year = plannerCalendarViewDate.getFullYear();
+    const month = plannerCalendarViewDate.getMonth();
+    if (labelNode) labelNode.innerText = plannerCalendarViewDate.toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startDow = new Date(year, month, 1).getDay();
+
+    for (let i = 0; i < startDow; i++) container.appendChild(document.createElement('div'));
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cellDateIso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const matches = systemAssignments.filter(t => t.date === cellDateIso);
+      const isToday = cellDateIso === isoDate(APP_TODAY);
+      const cell = document.createElement('button');
+      cell.onclick = () => { switchTab('planner'); document.getElementById('planner-item-date').value = cellDateIso; document.getElementById('planner-item-title').focus(); };
+      cell.className = `press p-1.5 border-2 rule thick text-center relative ${isToday ? 'bg-ink text-paper' : (matches.length > 0 ? 'bg-red/10 text-red font-bold' : '')}`;
+      cell.innerHTML = `<span>${day}</span>${matches.length > 0 && !isToday ? `<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-red"></span>` : ''}`;
+      container.appendChild(cell);
+    }
+  }
+
+  // ================= WORKSPACE =================
+  function spawnFloatingWidgetWindow(typeCode) {
+    const idMap = { pomodoro: 'pomo', youtube: 'youtube', google: 'google', sticky: 'sticky' };
+    const targetWindow = document.getElementById(`widget-${idMap[typeCode] || typeCode}`);
+    if (targetWindow) {
+      targetWindow.classList.remove('hidden');
+      document.querySelectorAll('.widget-window').forEach(win => win.style.zIndex = "40");
+      targetWindow.style.zIndex = "50";
+    }
+  }
+  function closeFloatingWidgetFrame(typeCode) {
+    const targetWindow = document.getElementById(`widget-${typeCode}`);
+    if (targetWindow) targetWindow.classList.add('hidden');
+  }
+  function setupFloatingDraggableMouseHandlersMeshSystem() {
+    document.querySelectorAll('.widget-window').forEach(windowEl => {
+      const handle = windowEl.querySelector('.handle');
+      if (!handle) return;
+      let isMoving = false, startX = 0, startY = 0, originalLeft = 0, originalTop = 0;
+      handle.addEventListener('mousedown', (e) => {
+        isMoving = true;
+        document.querySelectorAll('.widget-window').forEach(win => win.style.zIndex = "40");
+        windowEl.style.zIndex = "50";
+        startX = e.clientX; startY = e.clientY;
+        originalLeft = windowEl.offsetLeft; originalTop = windowEl.offsetTop;
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!isMoving) return;
+        windowEl.style.left = `${originalLeft + (e.clientX - startX)}px`;
+        windowEl.style.top = `${originalTop + (e.clientY - startY)}px`;
+      });
+      document.addEventListener('mouseup', () => { isMoving = false; });
+    });
+  }
+  function formatCanvasText(style) {
+    const txtArea = document.getElementById('workspace-note-textarea');
+    const start = txtArea.selectionStart, end = txtArea.selectionEnd;
+    const selectedChunk = txtArea.value.substring(start, end);
+    let modification = "";
+    switch (style) {
+      case 'bold': modification = `**${selectedChunk || 'bold text'}**`; break;
+      case 'italic': modification = `*${selectedChunk || 'italicized text'}*`; break;
+      case 'underline': modification = `<u>${selectedChunk || 'underlined text'}</u>`; break;
+      case 'heading': modification = `\n### ${selectedChunk || 'Heading'}\n`; break;
+      case 'bullet': modification = `\n* ${selectedChunk || 'List item'}\n`; break;
+    }
+    txtArea.setRangeText(modification, start, end, 'end');
+    txtArea.focus();
+  }
+  function injectImageIntoWorkspaceNotes(event) {
+    const file = event.target.files[0];
+    const textarea = document.getElementById('workspace-note-textarea');
+    if (!file || !textarea) return;
+    const imgMarkdown = `\n![Inserted Photo: ${file.name}](embedded-image)\n`;
+    const currentPos = textarea.selectionStart;
+    textarea.value = textarea.value.substring(0, currentPos) + imgMarkdown + textarea.value.substring(currentPos);
+  }
+  function saveCurrentWorkspaceDocFile() {
+    const titleInput = document.getElementById('workspace-note-title');
+    const textarea = document.getElementById('workspace-note-textarea');
+    let finalTitle = titleInput.value.trim() || 'Untitled Study Sheet';
+    let content = textarea.value;
+    if (!content.trim()) return alert("Write some notes before saving a document.");
+
+    const newDoc = { id: 'doc_' + Date.now(), title: finalTitle, content: content, timestamp: new Date().toLocaleString() };
+    workspaceFiles.push(newDoc);
+    saveWorkspaceFilesToCaches();
+    renderWorkspaceFilesHubList();
+    triggerBrowserDocFileBlobDownload(finalTitle, content);
+  }
+  function triggerBrowserDocFileBlobDownload(filename, bodyText) {
+    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><title>Document</title><style>body{font-family:Arial,sans-serif;font-size:11pt;}</style></head><body>";
+    const footer = "</body></html>";
+    const fullyCompiledHtmlString = header + bodyText.replace(/\n/g, '<br>') + footer;
+    const blob = new Blob([fullyCompiledHtmlString], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const tempAnchor = document.createElement('a');
+    tempAnchor.href = url;
+    tempAnchor.download = filename + ".doc";
+    document.body.appendChild(tempAnchor);
+    tempAnchor.click();
+    document.body.removeChild(tempAnchor);
+    URL.revokeObjectURL(url);
+  }
+  function renameWorkspaceCachedFileItem(fileId) {
+    const target = workspaceFiles.find(f => f.id === fileId);
+    if (!target) return;
+    const promptName = prompt("Enter a new title for this note document:", target.title);
+    if (promptName && promptName.trim()) {
+      target.title = promptName.trim();
+      saveWorkspaceFilesToCaches();
+      renderWorkspaceFilesHubList();
+    }
+  }
+  function deleteWorkspaceCachedFileItem(fileId) {
+    if (!confirm("Delete this saved document?")) return;
+    workspaceFiles = workspaceFiles.filter(f => f.id !== fileId);
+    saveWorkspaceFilesToCaches();
+    renderWorkspaceFilesHubList();
+  }
+  function bindWorkspaceFileToStudyDecks(fileId) {
+    const target = workspaceFiles.find(f => f.id === fileId);
+    if (!target) return;
+    if (systemDecks.length === 0) { alert("Create at least one flashcard deck first."); return; }
+    let selectorOptions = systemDecks.map((d, index) => `${index + 1}. ${d.name}`).join('\n');
+    const choice = prompt(`Choose target deck number to add this note into:\n\n${selectorOptions}`);
+    const selectedIndex = parseInt(choice) - 1;
+    if (selectedIndex >= 0 && selectedIndex < systemDecks.length) {
+      const deck = systemDecks[selectedIndex];
+      deck.items.push(mkItem('fill', `From note "${target.title}": what's the key takeaway?`, null, null, target.content.slice(0, 300), target.content.split(/\s+/)[0] || 'answer'));
+      saveStateInventoriesToCaches();
+      alert(`Linked "${target.title}" into [${deck.name}]!`);
+    }
+  }
+  function renderWorkspaceFilesHubList() {
+    const box = document.getElementById('workspace-recent-files-box');
+    if (!box) return;
+    box.innerHTML = '';
+    if (workspaceFiles.length === 0) {
+      box.innerHTML = `<p class="data-label opacity-50 italic">No files created yet. Type up a note and hit Save.</p>`;
+      return;
+    }
+    workspaceFiles.slice().reverse().forEach(f => {
+      const el = document.createElement('div');
+      el.className = "border-2 rule thick p-2.5 space-y-1.5";
+      el.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div class="truncate w-3/4">
+            <h4 class="text-xs font-bold truncate">${f.title}</h4>
+            <span class="data-label opacity-50 block">${f.timestamp}</span>
+          </div>
+          <button onclick="renameWorkspaceCachedFileItem('${f.id}')" title="Rename" class="text-red text-[11px] hover:underline font-bold">📝</button>
+        </div>
+        <div class="flex gap-2 pt-1 border-t hairline rule items-center justify-between">
+          <button onclick="bindWorkspaceFileToStudyDecks('${f.id}')" class="press bg-paper text-ink text-[10px] px-2 py-0.5 border-2 rule thick font-bold">+ DECK</button>
+          <button onclick="deleteWorkspaceCachedFileItem('${f.id}')" class="opacity-40 hover:text-red hover:opacity-100 text-[11px] font-bold">✕</button>
+        </div>`;
+      box.appendChild(el);
+    });
+  }
+  let pomoSecondsRemaining = 1500, pomoTimerInterval = null;
+  function togglePomodoroTimerExecution() {
+    const btn = document.getElementById('pomo-control-btn');
+    if (pomoTimerInterval) {
+      clearInterval(pomoTimerInterval); pomoTimerInterval = null; btn.innerText = "START TIMER";
+    } else {
+      btn.innerText = "PAUSE TIMER";
+      pomoTimerInterval = setInterval(() => {
+        if (pomoSecondsRemaining <= 0) {
+          clearInterval(pomoTimerInterval); pomoTimerInterval = null; btn.innerText = "FINISHED";
+          alert("Focus timer complete!"); pomoSecondsRemaining = 1500;
+        } else { pomoSecondsRemaining--; }
+        const m = String(Math.floor(pomoSecondsRemaining / 60)).padStart(2, '0');
+        const s = String(pomoSecondsRemaining % 60).padStart(2, '0');
+        document.getElementById('pomo-timer-display').innerText = `${m}:${s}`;
+      }, 1000);
+    }
+  }
+  function updateWidgetYoutubeIFrameTarget() {
+    const urlVal = document.getElementById('widget-yt-url').value.trim();
+    const container = document.getElementById('widget-yt-frame-container');
+    const placeholder = document.getElementById('widget-yt-placeholder-view');
+    if (!urlVal || !container) return;
+    let finalEmbed = urlVal;
+    if (urlVal.includes('watch?v=')) finalEmbed = urlVal.split('watch?v=')[1].split('&')[0];
+    else if (urlVal.includes('youtu.be/')) finalEmbed = urlVal.split('youtu.be/')[1].split('?')[0];
+    container.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${finalEmbed}" frameborder="0" allowfullscreen></iframe>`;
+    container.classList.remove('hidden');
+    placeholder.classList.add('hidden');
+  }
+  function launchWidgetGoogleSearch() {
+    const q = document.getElementById('widget-google-query').value.trim();
+    if (!q) return;
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank');
+  }
+  function triggerWorkspaceMemorizationRedirection() {
+    const notesValue = document.getElementById('workspace-note-textarea').value.trim();
+    const titleValue = document.getElementById('workspace-note-title').value.trim() || 'Workspace Note';
+    if (!notesValue) return alert("Write some notes first before turning them into flashcards.");
+    switchTab('quiz');
+    openDeckCreationWizard(false, notesValue, titleValue);
+  }
+
+  // ================= AI TUTOR (now via server proxy — no client-side API key) =================
+  let tutorPendingAttachments = [];
+
+  function handleTutorChatInputKeydownEvent(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); executeLiveTutorChatCyclePipeline(); }
+  }
+  function handleTutorAttachmentInputChange(event) {
+    const files = Array.from(event.target.files || []);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        tutorPendingAttachments.push({ name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] });
+        renderTutorAttachmentPreviews();
+      };
+      reader.readAsDataURL(file);
+    });
+    event.target.value = '';
+  }
+  function renderTutorAttachmentPreviews() {
+    const row = document.getElementById('tutor-attachment-preview-row');
+    if (tutorPendingAttachments.length === 0) { row.classList.add('hidden'); row.innerHTML = ''; return; }
+    row.classList.remove('hidden');
+    row.innerHTML = tutorPendingAttachments.map((a, idx) => `
+      <span class="flex items-center gap-1.5 border-2 rule thick text-[10px] font-bold px-2 py-1">
+        🖼 ${a.name.slice(0, 16)} <button onclick="removeTutorAttachment(${idx})" class="hover:text-red">✕</button>
+      </span>`).join('');
+  }
+  function removeTutorAttachment(idx) { tutorPendingAttachments.splice(idx, 1); renderTutorAttachmentPreviews(); }
+
+  function populateTutorTargetDropdownSelect() {
+    const dropdownSelector = document.getElementById('tutor-deck-target-dropdown');
+    if (!dropdownSelector) return;
+    dropdownSelector.innerHTML = '';
+    const baseOpt = document.createElement('option');
+    baseOpt.value = 'none'; baseOpt.innerText = 'Just chat (no deck)';
+    dropdownSelector.appendChild(baseOpt);
+    systemDecks.forEach(deck => {
+      const opt = document.createElement('option');
+      opt.value = deck.id;
+      opt.innerText = `${deck.parent !== 'none' ? '   > ' : '[DIR] '}${deck.name}`;
+      dropdownSelector.appendChild(opt);
+    });
+  }
+
+  function renderMarkdownSafely(text) {
+    try { return marked.parse(text || ''); } catch (e) { return (text || '').replace(/\n/g, '<br>'); }
+  }
+
+  async function callServerAI({ systemPrompt, message, images }) {
+    return apiRequest('/api/ai/chat', { method: 'POST', body: { systemPrompt, message, images } });
+  }
+
+  async function executeLiveTutorChatCyclePipeline() {
+    const txtArea = document.getElementById('tutor-chat-textarea');
+    const chatInputPayload = txtArea.value.trim();
+    const targetDeckNodeId = document.getElementById('tutor-deck-target-dropdown').value;
+    const attachmentsForThisMessage = [...tutorPendingAttachments];
+
+    if (!chatInputPayload && attachmentsForThisMessage.length === 0) return alert("Type a message or attach a photo first.");
+
+    let userBubbleHtml = chatInputPayload ? `<div class="chat-markdown">${renderMarkdownSafely(chatInputPayload)}</div>` : '';
+    if (attachmentsForThisMessage.length > 0) {
+      userBubbleHtml += `<div class="flex gap-1.5 flex-wrap mt-1">` + attachmentsForThisMessage.map(a => `<span class="text-[10px] border-2 rule thick px-2 py-0.5 font-bold">🖼 ${a.name.slice(0,14)}</span>`).join('') + `</div>`;
+    }
+    appendChatBubbleNodeElement('user', userBubbleHtml);
+    txtArea.value = '';
+    tutorPendingAttachments = [];
+    renderTutorAttachmentPreviews();
+
+    const triggerGenerationFlag = /deck|quiz|question|flashcard/i.test(chatInputPayload);
+
+    const progressLoaderId = 'bot-loading-' + Date.now();
+    const streamContainer = document.getElementById('tutor-chat-stream');
+    const loaderBubbleNode = document.createElement('div');
+    loaderBubbleNode.id = progressLoaderId;
+    loaderBubbleNode.className = "flex gap-3 max-w-[85%]";
+    loaderBubbleNode.innerHTML = `<div class="w-8 h-8 border-2 rule thick flex items-center justify-center text-xs shrink-0 font-bold">AI</div>
+      <div class="bg-white border-2 rule thick p-4 text-xs flex items-center gap-1"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+    streamContainer.appendChild(loaderBubbleNode);
+    streamContainer.scrollTop = streamContainer.scrollHeight;
+
+    let systemDirectivesPrompt = "";
+    if (triggerGenerationFlag) {
+      systemDirectivesPrompt = `
+        You are a friendly student study app assistant. The user wants flashcards made from what they've provided (text and/or attached images).
+        Return ONLY raw valid JSON (no markdown fences) matching:
+        { "response": "a short friendly sentence confirming what you made, using simple everyday words",
+          "questions": [ { "type": "mcq", "question": "...", "choices": ["A","B","C","D"], "correctIndex": 0, "explanation": "..." } ] }
+        Include 5 to 12 questions, mostly type "mcq" but you may include a couple of type "fill" with an "answer" field instead of choices/correctIndex.
+        Use very clear, simple, everyday language a student would understand.
+      `;
+    } else {
+      systemDirectivesPrompt = `
+        You are AI Tutor, a friendly study companion. Explain things clearly using simple, everyday words — no jargon.
+        Format your answer with markdown: use **bold** for key terms, short paragraphs, and bullet lists when listing steps or facts. Keep it easy to read.
+      `;
+    }
+
+    try {
+      const { text: responseRawTextPayload } = await callServerAI({
+        systemPrompt: systemDirectivesPrompt,
+        message: chatInputPayload,
+        images: attachmentsForThisMessage
+      });
+      const loaderNode = document.getElementById(progressLoaderId);
+      if (loaderNode) loaderNode.remove();
+
+      if (triggerGenerationFlag) {
+        const cleanJsonText = responseRawTextPayload.trim().replace(/```json/g, "").replace(/```/g, "");
+        const parsedPayload = JSON.parse(cleanJsonText);
+        appendChatBubbleNodeElement('bot', `<div class="chat-markdown">${renderMarkdownSafely(parsedPayload.response || "Made some flashcards for you!")}</div>`);
+        if (parsedPayload.questions && parsedPayload.questions.length > 0) {
+          const newItems = parsedPayload.questions.map(q => mkItem(q.type === 'fill' ? 'fill' : 'mcq', q.question, q.choices || null, q.correctIndex, q.explanation, q.answer));
+          if (targetDeckNodeId !== 'none') {
+            const targetDeck = systemDecks.find(d => d.id === targetDeckNodeId);
+            targetDeck.items.push(...newItems);
+          } else {
+            systemDecks.push({ id: 'deck-gen-' + Date.now(), name: `AI Chat: ` + (chatInputPayload.slice(0, 18) || 'Photo Deck') + '...', parent: 'none', items: newItems });
+          }
+          saveStateInventoriesToCaches();
+          populateTutorTargetDropdownSelect();
+          appendChatBubbleNodeElement('bot', `📂 <strong>${newItems.length} cards</strong> added to your Decks tab! Head over there to start memorizing.`);
+        }
+      } else {
+        appendChatBubbleNodeElement('bot', `<div class="chat-markdown">${renderMarkdownSafely(responseRawTextPayload)}</div>`);
+      }
+    } catch (err) {
+      console.error(err);
+      const loaderNode = document.getElementById(progressLoaderId);
+      if (loaderNode) loaderNode.remove();
+      appendChatBubbleNodeElement('bot', `⚠ <strong>Something went wrong:</strong> ${err.message}`);
+    }
+  }
+
+  function appendChatBubbleNodeElement(sender, contentHtml) {
+    const streamContainer = document.getElementById('tutor-chat-stream');
+    const wrapperNode = document.createElement('div');
+    wrapperNode.className = `flex gap-3 max-w-[85%] enter ${sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`;
+    const avatarIcon = sender === 'user' ? 'YOU' : 'AI';
+    const avatarBg = sender === 'user' ? 'bg-ink text-paper' : 'bg-red text-paper';
+    wrapperNode.innerHTML = `<div class="w-8 h-8 border-2 rule thick ${avatarBg} flex items-center justify-center text-[9px] shrink-0 font-bold">${avatarIcon}</div>
+      <div class="bg-white border-2 rule thick p-4 text-xs leading-relaxed">${contentHtml}</div>`;
+    streamContainer.appendChild(wrapperNode);
+    streamContainer.scrollTop = streamContainer.scrollHeight;
+  }
+
+  // ================= DECKS HOME =================
+  let currentQuizSubmodeRoute = 'memorize';
+
+  function updateReviewCtaSubtitle() {
+    const due = getDueReviewItems().length;
+    document.getElementById('review-cta-subtitle').innerText = due > 0
+      ? `${due} card${due === 1 ? '' : 's'} due right now.`
+      : `Mastered cards, resurfacing before you'd forget them.`;
+  }
+
+  function launchQuizSecondaryNavigationRoute(routeMode) {
+    currentQuizSubmodeRoute = routeMode;
+    if (routeMode === 'review') { startReviewDueSession(); return; }
+    if (routeMode === 'learn') {
+      const allItems = getAllItemsFlat();
+      if (allItems.length === 0) return alert("You don't have any decks yet. Create one first!");
+      alert("Tap any deck below, then choose 'Start Learning' inside it.");
+      return;
+    }
+    if (routeMode === 'memorize') { alert("Tap any deck below, then choose 'Start Memorizing' inside it."); return; }
+  }
+
+  function startReviewDueSession() {
+    const due = getDueReviewItems();
+    if (due.length === 0) return alert("Nothing is due for review right now — nice work staying on top of it!");
+    activeQuizDeckNodeReference = { name: 'Review Session', items: due.map(x => x.item) };
+    activeQuizEarnedCoinsAccumulator = 0;
+    activeQuizSelectedExplanationStatus = false;
+    const pool = due.map(x => x.item);
+    pool.sort(() => Math.random() - 0.5);
+    activeQuizBatchItems = pool.slice(0, 30);
+    activeQuizRetryQueue = [];
+    currentQuizItemIndex = 0;
+    document.getElementById('quiz-player-screen').classList.remove('hidden');
+    document.getElementById('quiz-player-deck-name').innerText = `Review Session`;
+    mountQuizItemCardViewIndex();
+  }
+
+  function renderDecksGridMatrixLayout() {
+    const container = document.getElementById('decks-grid-container');
+    container.innerHTML = '';
+    const searchKeyword = document.getElementById('deck-forgiving-search').value.toLowerCase().trim();
+    let processedFolderCollection = systemDecks.filter(deck => !searchKeyword || deck.name.toLowerCase().includes(searchKeyword));
+    document.getElementById('decks-count-badge').innerText = `${processedFolderCollection.length} DECKS`;
+
+    if (processedFolderCollection.length === 0) {
+      container.innerHTML = `<div class="col-span-full border-2 rule thick p-6 text-center text-xs opacity-50 italic">No decks yet. Create one to get started!</div>`;
+      return;
+    }
+    const mainParentsArray = processedFolderCollection.filter(d => d.parent === 'none');
+    const orphanSubdecksArray = processedFolderCollection.filter(d => d.parent !== 'none' && !mainParentsArray.some(p => p.id === d.parent));
+    const layoutSequence = [];
+    mainParentsArray.forEach(p => { layoutSequence.push(p); processedFolderCollection.filter(d => d.parent === p.id).forEach(c => layoutSequence.push(c)); });
+    orphanSubdecksArray.forEach(o => layoutSequence.push(o));
+
+    layoutSequence.forEach((deck, idx) => {
+      const isSubdeck = deck.parent !== 'none';
+      const masteredCount = deck.items.filter(i => i.mastered).length;
+      const itemBox = document.createElement('div');
+      itemBox.className = "enter flex flex-col items-center justify-between text-center p-2 group relative cursor-pointer border-2 rule thick hover:bg-white";
+      itemBox.innerHTML = `
+        <div onclick="openDeckDetailScreen('${deck.id}')" class="w-full flex flex-col items-center">
+          <div class="w-full h-10 relative mb-2 flex items-center justify-center border-2 rule thick bg-paperDim">
+            <span class="data-num text-xs font-bold">${String(idx+1).padStart(2,'0')} · ${deck.items.length}</span>
+          </div>
+          <div class="text-xs font-bold truncate w-full px-1">${isSubdeck ? '> ' : ''}${deck.name}</div>
+          <div class="data-label opacity-50 mt-0.5">${masteredCount}/${deck.items.length} MASTERED</div>
+        </div>
+        <div class="mt-2 flex gap-1 opacity-60 hover:opacity-100 transition z-10">
+          <button onclick="deleteTargetDeckFolderNodeElement('${deck.id}')" class="press data-label border-2 rule thick px-1.5 py-0.5">DELETE</button>
+        </div>`;
+      container.appendChild(itemBox);
+    });
+  }
+
+  function deleteTargetDeckFolderNodeElement(id) {
+    if (!confirm("Delete this deck? This can't be undone.")) return;
+    systemDecks = systemDecks.filter(d => d.id !== id && d.parent !== id);
+    saveStateInventoriesToCaches();
+    renderDecksGridMatrixLayout();
+  }
+
+  // ================= DECK CREATION WIZARD =================
+  let wizardSourceMode = 'paste';
+  let wizardImageAttachments = [];
+  let wizardFileText = '';
+  let wizardGeneratedItems = [];
+  let wizardIsSubdeckMode = false;
+
+  function openDeckCreationWizard(isSubdeck, prefillText, prefillName) {
+    wizardIsSubdeckMode = !!isSubdeck;
+    wizardImageAttachments = [];
+    wizardFileText = '';
+    wizardGeneratedItems = [];
+    document.getElementById('wizard-image-preview-row').innerHTML = '';
+    document.getElementById('wizard-file-status').innerText = '';
+    document.getElementById('wizard-deck-name').value = prefillName || '';
+    document.getElementById('wizard-paste-textarea').value = prefillText || '';
+
+    const parentSelect = document.getElementById('wizard-deck-parent');
+    parentSelect.innerHTML = `<option value="none">No parent (main deck)</option>`;
+    systemDecks.filter(d => d.parent === 'none').forEach(d => {
+      const opt = document.createElement('option'); opt.value = d.id; opt.innerText = `Inside: ${d.name}`; parentSelect.appendChild(opt);
+    });
+    if (isSubdeck === true && activeDeckDetailId) parentSelect.value = activeDeckDetailId;
+
+    document.getElementById('deck-wizard-overlay').classList.remove('hidden');
+    wizardGoToStep(prefillText ? 2 : 1);
+    if (prefillText) setWizardSourceMode('paste');
+  }
+  function closeDeckCreationWizard() { document.getElementById('deck-wizard-overlay').classList.add('hidden'); }
+
+  function wizardGoToStep(stepNum) {
+    document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
+    const stepEl = document.getElementById('wizard-step-' + stepNum);
+    stepEl.classList.remove('hidden');
+    document.querySelectorAll('.step-dot').forEach(dot => {
+      const n = parseInt(dot.dataset.step);
+      dot.classList.toggle('active', n === stepNum);
+      dot.classList.toggle('done', n < stepNum);
+    });
+  }
+
+  function setWizardSourceMode(mode) {
+    wizardSourceMode = mode;
+    ['paste', 'image', 'file', 'topic'].forEach(m => document.getElementById('wizard-input-' + m).classList.toggle('hidden', m !== mode));
+    wizardGoToStep(2);
+  }
+
+  function handleWizardImageInputChange(event) {
+    const files = Array.from(event.target.files || []);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        wizardImageAttachments.push({ name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] });
+        const row = document.getElementById('wizard-image-preview-row');
+        const chip = document.createElement('span');
+        chip.className = "text-[10px] border-2 rule thick px-2 py-1 font-bold";
+        chip.innerText = '🖼 ' + file.name.slice(0, 16);
+        row.appendChild(chip);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function handleWizardFileInputChange(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      wizardFileText = reader.result;
+      document.getElementById('wizard-file-status').innerText = `Loaded "${file.name}" (${wizardFileText.length} characters).`;
+    };
+    reader.readAsText(file);
+  }
+
+  async function executeWizardGenerationRequest() {
+    const deckName = document.getElementById('wizard-deck-name').value.trim();
+    if (!deckName) return alert("Please give your deck a name.");
+
+    wizardGoToStep(3);
+    try {
+      const systemDirectivesPrompt = `
+        You are a study app that turns material into flashcards for active recall practice.
+        Return ONLY raw valid JSON (no markdown fences) matching:
+        { "questions": [ { "type": "mcq", "question": "...", "choices": ["A","B","C","D"], "correctIndex": 0, "explanation": "..." } ] }
+        Generate between 15 and 40 questions depending on how much material is given (more material = more questions, up to 40).
+        Mostly use type "mcq" with 4 choices. Include a few type "fill" (with an "answer" field instead of choices) and a few type "order"
+        (with a "sequence" array of 3-5 short strings in the correct order, plus a "question" describing what to order).
+        Use simple, clear, everyday language appropriate for a school student. Base every question strictly on the given material.
+      `;
+
+      let materialText = '';
+      if (wizardSourceMode === 'paste') materialText = document.getElementById('wizard-paste-textarea').value.trim();
+      else if (wizardSourceMode === 'file') materialText = wizardFileText;
+      else if (wizardSourceMode === 'topic') materialText = `Topic: ${document.getElementById('wizard-topic-input').value.trim()}`;
+      else if (wizardSourceMode === 'image') materialText = 'See attached image(s).';
+
+      if (!materialText && wizardImageAttachments.length === 0) { wizardGoToStep(2); return alert("Please provide some material first."); }
+
+      const { text } = await callServerAI({ systemPrompt: systemDirectivesPrompt, message: materialText, images: wizardImageAttachments });
+      const cleanJsonText = text.trim().replace(/```json/g, "").replace(/```/g, "");
+      const parsed = JSON.parse(cleanJsonText);
+
+      wizardGeneratedItems = (parsed.questions || []).map(q => mkItem(
+        q.type === 'fill' ? 'fill' : (q.type === 'order' ? 'order' : 'mcq'),
+        q.question, q.choices || null, q.correctIndex, q.explanation, q.answer, q.sequence
+      ));
+      renderWizardCurationList();
+      wizardGoToStep(4);
+    } catch (err) {
+      console.error(err);
+      wizardGoToStep(2);
+      alert("Couldn't generate cards: " + err.message);
+    }
+  }
+
+  function renderWizardCurationList() {
+    const list = document.getElementById('wizard-cards-review-list');
+    list.innerHTML = '';
+    document.getElementById('wizard-card-count-badge').innerText = `${wizardGeneratedItems.length} CARDS`;
+    wizardGeneratedItems.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = "flex items-start justify-between gap-2 border-2 rule thick p-3 text-xs";
+      let detail = '';
+      if (item.type === 'mcq') detail = `<div class="data-label opacity-50 mt-1">CHOICES: ${item.choices.join(' · ')}</div>`;
+      else if (item.type === 'fill') detail = `<div class="data-label opacity-50 mt-1">ANSWER: ${item.answer}</div>`;
+      else if (item.type === 'order') detail = `<div class="data-label opacity-50 mt-1">ORDER: ${item.sequence.join(' → ')}</div>`;
+      row.innerHTML = `<div><div class="font-bold">${item.question}</div>${detail}</div>
+        <button onclick="removeWizardGeneratedItem(${idx})" class="opacity-50 hover:text-red hover:opacity-100 font-bold shrink-0">✕</button>`;
+      list.appendChild(row);
+    });
+    if (wizardGeneratedItems.length === 0) list.innerHTML = `<div class="text-xs opacity-50 italic text-center py-4">No cards left — go back and try again.</div>`;
+  }
+  function removeWizardGeneratedItem(idx) { wizardGeneratedItems.splice(idx, 1); renderWizardCurationList(); }
+
+  function finalizeWizardDeckSave() {
+    if (wizardGeneratedItems.length === 0) return alert("You need at least one card to save this deck.");
+    const deckName = document.getElementById('wizard-deck-name').value.trim() || 'Untitled Deck';
+    const parentVal = document.getElementById('wizard-deck-parent').value;
+    const newDeck = { id: 'deck-' + Date.now(), name: deckName, parent: parentVal, items: wizardGeneratedItems };
+    systemDecks.push(newDeck);
+    saveStateInventoriesToCaches();
+    closeDeckCreationWizard();
+    renderDecksGridMatrixLayout();
+    openDeckDetailScreen(newDeck.id);
+  }
+
+  // ================= DECK DETAIL SCREEN =================
+  let activeDeckDetailId = null;
+  function openDeckDetailScreen(deckId) {
+    activeDeckDetailId = deckId;
+    const deck = systemDecks.find(d => d.id === deckId);
+    if (!deck) return;
+    document.getElementById('deck-detail-name').innerText = deck.name;
+    document.getElementById('deck-stat-total').innerText = deck.items.length;
+    document.getElementById('deck-stat-mastered').innerText = deck.items.filter(i => i.mastered).length;
+    document.getElementById('deck-stat-weak').innerText = deck.items.filter(i => i.weakCount > 0 && !i.mastered).length;
+    const now = Date.now();
+    document.getElementById('deck-stat-due').innerText = deck.items.filter(i => i.mastered && i.nextReviewAt && i.nextReviewAt <= now).length;
+
+    const subContainer = document.getElementById('deck-subdecks-list');
+    subContainer.innerHTML = '';
+    const subs = systemDecks.filter(d => d.parent === deckId);
+    if (subs.length === 0) subContainer.innerHTML = `<div class="col-span-full text-[11px] opacity-50 italic">No subdecks yet.</div>`;
+    subs.forEach(s => {
+      const chip = document.createElement('button');
+      chip.onclick = () => openDeckDetailScreen(s.id);
+      chip.className = "press border-2 rule thick p-3 text-left text-xs font-bold";
+      chip.innerText = `[DIR] ${s.name} (${s.items.length})`;
+      subContainer.appendChild(chip);
+    });
+
+    const cardsList = document.getElementById('deck-cards-list');
+    cardsList.innerHTML = '';
+    if (deck.items.length === 0) cardsList.innerHTML = `<div class="text-xs opacity-50 italic">No cards yet.</div>`;
+    deck.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = "flex items-center justify-between text-xs border-2 rule thick px-3 py-2";
+      row.innerHTML = `<span class="truncate pr-2">${item.mastered ? '✔' : '□'} ${item.question}</span>
+        <button onclick="deleteDeckCardItem('${item.id}')" class="opacity-50 hover:text-red hover:opacity-100 font-bold shrink-0">✕</button>`;
+      cardsList.appendChild(row);
+    });
+
+    document.getElementById('deck-detail-screen').classList.remove('hidden');
+  }
+  function deleteDeckCardItem(itemId) {
+    const deck = systemDecks.find(d => d.id === activeDeckDetailId);
+    deck.items = deck.items.filter(i => i.id !== itemId);
+    saveStateInventoriesToCaches();
+    openDeckDetailScreen(activeDeckDetailId);
+  }
+  function closeDeckDetailScreen() {
+    document.getElementById('deck-detail-screen').classList.add('hidden');
+    renderDecksGridMatrixLayout();
+  }
+
+  // ================= LEARN MODE =================
+  let learnModeItems = [], learnModeIndex = 0;
+  function startDeckLearnMode() {
+    const deck = systemDecks.find(d => d.id === activeDeckDetailId);
+    if (!deck || deck.items.length === 0) return alert("This deck has no cards yet.");
+    learnModeItems = deck.items;
+    learnModeIndex = 0;
+    document.getElementById('learn-mode-deck-name').innerText = deck.name;
+    document.getElementById('learn-mode-screen').classList.remove('hidden');
+    renderLearnModeCard();
+  }
+  function renderLearnModeCard() {
+    const item = learnModeItems[learnModeIndex];
+    document.getElementById('learn-mode-progress-text').innerText = `CARD ${learnModeIndex + 1} OF ${learnModeItems.length}`;
+    document.getElementById('learn-mode-question-text').innerText = item.question;
+    const answerBlock = document.getElementById('learn-mode-answer-block');
+    answerBlock.classList.add('hidden');
+    let answerText = '';
+    if (item.type === 'mcq') answerText = `Correct answer: <strong>${item.choices[item.correctIndex]}</strong>. ${item.explanation}`;
+    else if (item.type === 'fill') answerText = `Correct answer: <strong>${item.answer}</strong>. ${item.explanation}`;
+    else if (item.type === 'order') answerText = `Correct order: <strong>${item.sequence.join(' → ')}</strong>. ${item.explanation}`;
+    answerBlock.innerHTML = answerText;
+    document.getElementById('learn-mode-reveal-btn').classList.remove('hidden');
+  }
+  function revealLearnModeAnswer() {
+    document.getElementById('learn-mode-answer-block').classList.remove('hidden');
+    document.getElementById('learn-mode-reveal-btn').classList.add('hidden');
+  }
+  function learnModeStepCard(direction) {
+    learnModeIndex = Math.max(0, Math.min(learnModeItems.length - 1, learnModeIndex + direction));
+    renderLearnModeCard();
+  }
+  function closeLearnFullscreenModule() { document.getElementById('learn-mode-screen').classList.add('hidden'); }
+
+  // ================= MEMORIZE ENGINE =================
+  let activeQuizBatchItems = [], activeQuizRetryQueue = [], currentQuizItemIndex = 0;
+  let activeQuizDeckNodeReference = null, activeQuizEarnedCoinsAccumulator = 0;
+  let activeQuizQuestionTimestamp = 0, activeQuizTimerInterval = null, activeQuizSelectedExplanationStatus = false;
+
+  function startDeckMemorizeMode() {
+    const deck = systemDecks.find(d => d.id === activeDeckDetailId);
+    if (!deck || deck.items.length === 0) return alert("This deck has no cards yet.");
+    const unmastered = deck.items.filter(i => !i.mastered);
+    const pool = unmastered.length > 0 ? unmastered : deck.items;
+    activeQuizDeckNodeReference = deck;
+    activeQuizEarnedCoinsAccumulator = 0;
+    activeQuizSelectedExplanationStatus = false;
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    activeQuizBatchItems = shuffled.slice(0, 30);
+    activeQuizRetryQueue = [];
+    currentQuizItemIndex = 0;
+    document.getElementById('quiz-player-screen').classList.remove('hidden');
+    document.getElementById('quiz-player-deck-name').innerText = `DECK: ${deck.name}`;
+    mountQuizItemCardViewIndex();
+  }
+
+  function mountQuizItemCardViewIndex() {
+    if (activeQuizTimerInterval) clearInterval(activeQuizTimerInterval);
+    document.getElementById('quiz-explanation-drawer').classList.add('hidden');
+    activeQuizSelectedExplanationStatus = false;
+
+    if (currentQuizItemIndex >= activeQuizBatchItems.length) {
+      if (activeQuizRetryQueue.length > 0) {
+        activeQuizBatchItems = activeQuizRetryQueue;
+        activeQuizRetryQueue = [];
+        currentQuizItemIndex = 0;
+      } else {
+        return processQuizPlaybackSessionCompletionSummary();
+      }
+    }
+
+    const currentCardNode = activeQuizBatchItems[currentQuizItemIndex];
+    document.getElementById('quiz-progress-text').innerText = `CARD ${currentQuizItemIndex + 1} OF ${activeQuizBatchItems.length}`;
+    { const pct = Math.round((currentQuizItemIndex / activeQuizBatchItems.length) * 100);
+      document.getElementById('quiz-progress-bar-fill').style.width = `${pct}%`;
+      const pctLabel = document.getElementById('quiz-progress-bar-pct');
+      if (pctLabel) pctLabel.innerText = `${pct}% · CARD ${currentQuizItemIndex + 1}/${activeQuizBatchItems.length}`;
+    }
+    document.getElementById('quiz-score-tracker').innerText = `EARNED: +${activeQuizEarnedCoinsAccumulator} COINS`;
+    document.getElementById('quiz-active-question-text').innerText = currentCardNode.question;
+
+    const choicesContainer = document.getElementById('quiz-choices-grid');
+    choicesContainer.innerHTML = '';
+
+    if (currentCardNode.type === 'mcq') {
+      currentCardNode.choices.forEach((choice, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "press w-full text-left p-3 bg-white border-2 rule thick text-xs font-bold flex justify-between items-center";
+        btn.innerHTML = `<span>${choice}</span><span class="data-num opacity-50">[${idx + 1}]</span>`;
+        btn.onclick = () => validateQuizChoiceUserSelectionIndex(idx === currentCardNode.correctIndex, idx);
+        choicesContainer.appendChild(btn);
+      });
+    } else if (currentCardNode.type === 'fill') {
+      choicesContainer.innerHTML = `
+        <input type="text" id="fill-answer-input" placeholder="Type your answer..." class="w-full bg-white border-2 rule thick p-3 text-xs focus:outline-none">
+        <button onclick="submitFillAnswer()" class="press w-full bg-red text-paper font-bold text-xs py-2.5 border-2 rule thick">SUBMIT ANSWER</button>`;
+      setTimeout(() => { const el = document.getElementById('fill-answer-input'); if (el) el.focus(); }, 50);
+    } else if (currentCardNode.type === 'order') {
+      renderOrderTypeQuestion(currentCardNode);
+    }
+
+    activeQuizQuestionTimestamp = Date.now();
+    const timerBadge = document.getElementById('blitz-timer-badge');
+    timerBadge.className = "ml-2 data-num text-xs bg-ink text-paper px-2 py-0.5 font-bold";
+    timerBadge.innerText = `8.0s LIMIT`;
+    activeQuizTimerInterval = setInterval(() => {
+      const delta = (Date.now() - activeQuizQuestionTimestamp) / 1000;
+      let remainder = (8.0 - delta).toFixed(1);
+      if (remainder <= 0) {
+        clearInterval(activeQuizTimerInterval);
+        timerBadge.innerText = "OVERTIME";
+        timerBadge.className = "ml-2 data-num text-xs bg-red text-paper px-2 py-0.5 font-bold";
+      } else {
+        timerBadge.innerText = `${remainder}s`;
+        if (remainder <= 3.0) timerBadge.className = "ml-2 data-num text-xs bg-red text-paper px-2 py-0.5 font-bold rec-dot";
+      }
+    }, 100);
+  }
+
+  let orderTypeSelection = [];
+  function renderOrderTypeQuestion(card) {
+    orderTypeSelection = [];
+    const shuffled = [...card.sequence].sort(() => Math.random() - 0.5);
+    const choicesContainer = document.getElementById('quiz-choices-grid');
+    choicesContainer.innerHTML = `
+      <div class="data-label opacity-60 mb-1">TAP ITEMS IN THE CORRECT ORDER:</div>
+      <div id="order-your-answer-row" class="flex flex-wrap gap-2 min-h-[36px] p-2 border-2 rule thick text-xs"></div>
+      <div id="order-choices-row" class="flex flex-wrap gap-2"></div>
+      <button onclick="submitOrderAnswer()" class="press w-full bg-red text-paper font-bold text-xs py-2.5 border-2 rule thick mt-1">SUBMIT ORDER</button>`;
+    const choicesRow = document.getElementById('order-choices-row');
+    shuffled.forEach(label => {
+      const chip = document.createElement('button');
+      chip.className = "press bg-white border-2 rule thick px-3 py-1.5 text-xs font-bold";
+      chip.innerText = label;
+      chip.onclick = () => {
+        orderTypeSelection.push(label);
+        chip.disabled = true; chip.classList.add('opacity-30');
+        renderOrderAnswerRow();
+      };
+      choicesRow.appendChild(chip);
+    });
+  }
+  function renderOrderAnswerRow() {
+    document.getElementById('order-your-answer-row').innerHTML = orderTypeSelection.map((l, i) => `<span class="border-2 rule thick px-2 py-1 font-bold">${i + 1}. ${l}</span>`).join('');
+  }
+  function submitOrderAnswer() {
+    const card = activeQuizBatchItems[currentQuizItemIndex];
+    const isCorrect = JSON.stringify(orderTypeSelection) === JSON.stringify(card.sequence);
+    validateQuizChoiceUserSelectionIndex(isCorrect, null);
+  }
+  function submitFillAnswer() {
+    const card = activeQuizBatchItems[currentQuizItemIndex];
+    const val = (document.getElementById('fill-answer-input').value || '').trim().toLowerCase();
+    const isCorrect = val.length > 0 && val === (card.answer || '').trim().toLowerCase();
+    validateQuizChoiceUserSelectionIndex(isCorrect, null);
+  }
+
+  function validateQuizChoiceUserSelectionIndex(isCorrect, selectedIndex) {
+    if (activeQuizTimerInterval) clearInterval(activeQuizTimerInterval);
+    const currentCardNode = activeQuizBatchItems[currentQuizItemIndex];
+    const speedElapsedSeconds = (Date.now() - activeQuizQuestionTimestamp) / 1000;
+    const choicesButtons = document.querySelectorAll('#quiz-choices-grid button');
+
+    if (isCorrect) {
+      if (typeof soundfx !== 'undefined') soundfx.success();
+      if (currentCardNode.type === 'mcq' && selectedIndex !== null && choicesButtons[selectedIndex]) {
+        choicesButtons[selectedIndex].className = "w-full text-left p-3 bg-green text-paper border-2 rule thick text-xs font-bold flex justify-between items-center";
+      }
+      let transactionPayout = 10;
+      if (speedElapsedSeconds <= 3.0) transactionPayout += 50;
+      activeQuizEarnedCoinsAccumulator += transactionPayout;
+      walletBalance += transactionPayout;
+      updateGlobalCoinBalanceDisplayNode(true);
+
+      currentCardNode.correctStreak = (currentCardNode.correctStreak || 0) + 1;
+      if (currentCardNode.correctStreak >= 2 && !currentCardNode.mastered) {
+        currentCardNode.mastered = true;
+        scheduleNextReview(currentCardNode);
+        saveStateInventoriesToCaches();
+      } else if (currentCardNode.mastered) {
+        scheduleNextReview(currentCardNode);
+        saveStateInventoriesToCaches();
+      }
+      setTimeout(() => { currentQuizItemIndex++; mountQuizItemCardViewIndex(); }, 700);
+    } else {
+      if (typeof soundfx !== 'undefined') soundfx.error();
+      if (currentCardNode.type === 'mcq' && selectedIndex !== null && choicesButtons[selectedIndex]) {
+        choicesButtons[selectedIndex].className = "w-full text-left p-3 bg-red text-paper border-2 rule thick text-xs font-bold flex justify-between items-center";
+        if (choicesButtons[currentCardNode.correctIndex]) choicesButtons[currentCardNode.correctIndex].className = "w-full text-left p-3 bg-green/20 border-2 border-green rule thick text-xs font-bold flex justify-between items-center";
+      }
+      currentCardNode.correctStreak = 0;
+      currentCardNode.weakCount = (currentCardNode.weakCount || 0) + 1;
+      currentCardNode.mastered = false;
+      currentCardNode.nextReviewAt = null;
+      activeQuizRetryQueue.push(currentCardNode);
+      saveStateInventoriesToCaches();
+      setTimeout(() => { currentQuizItemIndex++; mountQuizItemCardViewIndex(); }, 1300);
+    }
+  }
+
+  function buyActiveQuestionExplanationPayload() {
+    if (activeQuizSelectedExplanationStatus) return alert("Already unlocked for this card.");
+    if (walletBalance < 20) return alert("Not enough coins!");
+    walletBalance -= 20;
+    updateGlobalCoinBalanceDisplayNode(true);
+    activeQuizSelectedExplanationStatus = true;
+    const currentCardNode = activeQuizBatchItems[currentQuizItemIndex];
+    const drawerNode = document.getElementById('quiz-explanation-drawer');
+    drawerNode.className = "border-2 rule thick p-4 text-xs leading-relaxed block enter";
+    drawerNode.innerHTML = `💡 <strong>Hint:</strong> ${currentCardNode.explanation || 'No extra hint available.'}`;
+  }
+
+  function processQuizPlaybackSessionCompletionSummary() {
+    saveStateInventoriesToCaches();
+    alert(`Round finished! Come back later for the next batch or to review what you've mastered.`);
+    forceCloseQuizSessionLoop();
+  }
+
+  function forceCloseQuizSessionLoop() {
+    if (activeQuizTimerInterval) clearInterval(activeQuizTimerInterval);
+    document.getElementById('quiz-player-screen').classList.add('hidden');
+    renderDecksGridMatrixLayout();
+    renderDashboardInterfacePipelineMetrics();
+    if (activeDeckDetailId && !document.getElementById('deck-detail-screen').classList.contains('hidden')) openDeckDetailScreen(activeDeckDetailId);
+  }
+
+  // ================= PLANNER =================
+  function navigatePlannerCalendar(delta) {
+    plannerCalendarViewDate.setMonth(plannerCalendarViewDate.getMonth() + delta);
+    renderPlannerInterfaceCoreLayoutComponents();
+  }
+
+  function renderPlannerInterfaceCoreLayoutComponents() {
+    const meshContainer = document.getElementById('calendar-grid-days-mesh');
+    const label = document.getElementById('planner-calendar-month-label');
+    meshContainer.innerHTML = '';
+    const year = plannerCalendarViewDate.getFullYear();
+    const month = plannerCalendarViewDate.getMonth();
+    label.innerText = plannerCalendarViewDate.toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startDow = new Date(year, month, 1).getDay();
+
+    for (let i = 0; i < startDow; i++) {
+      const blank = document.createElement('div');
+      blank.className = "bg-transparent";
+      meshContainer.appendChild(blank);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cellDateIso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const matches = systemAssignments.filter(t => t.date === cellDateIso);
+      const isToday = cellDateIso === isoDate(APP_TODAY);
+      const dayBoxNode = document.createElement('div');
+      dayBoxNode.className = `border-2 rule thick p-1.5 min-h-[64px] flex flex-col justify-between text-left relative cursor-pointer ${isToday ? 'bg-ink text-paper' : 'bg-white'}`;
+      dayBoxNode.onclick = () => { document.getElementById('planner-item-date').value = cellDateIso; document.getElementById('planner-item-title').focus(); };
+      dayBoxNode.innerHTML = `<span class="data-num font-bold ${isToday ? 'text-paper' : 'opacity-60'}">${day}</span>
+        <div class="space-y-0.5">${matches.slice(0,2).map(m => `<span class="block text-[8px] font-bold border rule px-1 truncate">${m.title}</span>`).join('')}${matches.length > 2 ? `<span class="text-[8px] opacity-60">+${matches.length - 2} more</span>` : ''}</div>`;
+      meshContainer.appendChild(dayBoxNode);
+    }
+
+    const tasksContainer = document.getElementById('planner-full-tasks-list');
+    tasksContainer.innerHTML = '';
+    const sortedTasks = [...systemAssignments].sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (sortedTasks.length === 0) tasksContainer.innerHTML = `<div class="text-xs opacity-50 italic">No tasks yet.</div>`;
+    sortedTasks.forEach(task => {
+      let borderClass = 'border-l-4';
+      if (task.priorityScore == 3) borderClass = 'border-l-4 border-l-red';
+      const node = document.createElement('div');
+      node.className = `p-2.5 border-2 rule thick flex justify-between items-center text-xs ${borderClass}`;
+      node.innerHTML = `<div><div class="font-bold">${task.title}</div><div class="data-label opacity-50 mt-0.5">${task.type} · ${task.date}</div></div>
+        <button onclick="removePlannerTaskNodeElement('${task.id}')" class="opacity-50 hover:text-red hover:opacity-100 font-bold px-2">✕</button>`;
+      tasksContainer.appendChild(node);
+    });
+
+    renderGradesSpreadsheet();
+    renderMiniDashboardCalendar();
+  }
+
+  function saveNewlyConfiguredPlannerNodeElement() {
+    const titleVal = document.getElementById('planner-item-title').value.trim();
+    const dateVal = document.getElementById('planner-item-date').value || isoDate(APP_TODAY);
+    const typeVal = document.getElementById('planner-item-type').value.trim() || 'General';
+    if (!titleVal) return alert("Please type a task title.");
+    systemAssignments.push({
+      id: 'task-' + Date.now(), title: titleVal,
+      type: typeVal, date: dateVal,
+      priorityScore: parseInt(document.getElementById('planner-item-priority').value)
+    });
+    saveStateInventoriesToCaches();
+    document.getElementById('planner-item-title').value = '';
+    document.getElementById('planner-item-type').value = '';
+    renderPlannerInterfaceCoreLayoutComponents();
+    renderDashboardInterfacePipelineMetrics();
+  }
+  function removePlannerTaskNodeElement(id) {
+    systemAssignments = systemAssignments.filter(t => t.id !== id);
+    saveStateInventoriesToCaches();
+    renderPlannerInterfaceCoreLayoutComponents();
+    renderDashboardInterfacePipelineMetrics();
+  }
+
+  function computeSubjectOverallPercentage(subj) {
+    let weightedSum = 0, weightUsed = 0;
+    subj.categories.forEach(cat => {
+      if (cat.entries.length === 0) return;
+      const catAvg = cat.entries.reduce((s, e) => s + (e.num / e.den) * 100, 0) / cat.entries.length;
+      weightedSum += catAvg * (parseFloat(cat.weight) || 0);
+      weightUsed += (parseFloat(cat.weight) || 0);
+    });
+    if (weightUsed === 0) return null;
+    return weightedSum / weightUsed;
+  }
+
+  function renderGradesSpreadsheet() {
+    const container = document.getElementById('grades-spreadsheet-container');
+    container.innerHTML = '';
+    if (systemSubjects.length === 0) {
+      container.innerHTML = `<div class="text-xs opacity-50 italic">No subjects yet — click "+ Add Subject" to start your gradebook.</div>`;
+      return;
+    }
+    systemSubjects.forEach(subj => {
+      const overallPct = computeSubjectOverallPercentage(subj);
+      const weightTotal = subj.categories.reduce((s, c) => s + (parseFloat(c.weight) || 0), 0);
+      const subjBox = document.createElement('div');
+      subjBox.className = "border-2 rule thick overflow-hidden";
+      subjBox.innerHTML = `
+        <div class="bg-paperDim px-4 py-3 flex items-center justify-between gap-3 flex-wrap border-b-2 rule thick">
+          <input value="${subj.name}" onchange="renameGradeSubject('${subj.id}', this.value)" class="bg-transparent font-display text-sm uppercase focus:outline-none border-b-2 border-transparent focus:border-red">
+          <div class="flex items-center gap-3">
+            <span class="data-label px-2 py-1 border-2 rule thick">WEIGHT ${weightTotal}%</span>
+            <span class="data-num text-sm font-black text-red">${overallPct === null ? '—' : overallPct.toFixed(1) + '%'}</span>
+            <button onclick="addNewGradeCategory('${subj.id}')" class="icon-badge-btn data-label text-red hover:underline"><span class="icon-inline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>CATEGORY</button>
+            <button onclick="deleteGradeSubject('${subj.id}')" class="data-label opacity-50 hover:text-red">DELETE</button>
+          </div>
+        </div>
+        <div class="p-4 space-y-3" id="subj-categories-${subj.id}"></div>`;
+      container.appendChild(subjBox);
+
+      const catContainer = subjBox.querySelector(`#subj-categories-${subj.id}`);
+      subj.categories.forEach(cat => {
+        const catAvg = cat.entries.length > 0 ? (cat.entries.reduce((s, e) => s + (e.num / e.den) * 100, 0) / cat.entries.length) : null;
+        const catBox = document.createElement('div');
+        catBox.className = "border-2 rule thick overflow-hidden";
+        catBox.innerHTML = `
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="bg-paperDim data-label border-b-2 rule thick">
+                <th class="p-2"><input value="${cat.name}" onchange="renameGradeCategory('${subj.id}','${cat.id}', this.value)" class="bg-transparent font-bold focus:outline-none w-24"></th>
+                <th class="p-2 w-20">WEIGHT %</th>
+                <th class="p-2">ENTRY</th>
+                <th class="p-2 w-24">SCORE</th>
+                <th class="p-2 w-24">OUT OF</th>
+                <th class="p-2 w-16 text-right">AVG</th>
+                <th class="p-2 w-10"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${cat.entries.map(e => `
+                <tr class="border-b hairline rule">
+                  <td class="p-2"></td><td class="p-2"></td>
+                  <td class="p-2"><input value="${e.label}" onchange="updateGradeEntryField('${subj.id}','${cat.id}','${e.id}','label', this.value)" class="bg-paper border-2 rule thick px-2 py-1 w-full focus:outline-none"></td>
+                  <td class="p-2"><input type="number" value="${e.num}" onchange="updateGradeEntryField('${subj.id}','${cat.id}','${e.id}','num', this.value)" class="bg-paper border-2 rule thick px-2 py-1 w-full focus:outline-none"></td>
+                  <td class="p-2"><input type="number" value="${e.den}" onchange="updateGradeEntryField('${subj.id}','${cat.id}','${e.id}','den', this.value)" class="bg-paper border-2 rule thick px-2 py-1 w-full focus:outline-none"></td>
+                  <td class="p-2 text-right data-num">${((e.num / e.den) * 100).toFixed(0)}%</td>
+                  <td class="p-2 text-right"><button onclick="deleteGradeEntry('${subj.id}','${cat.id}','${e.id}')" class="opacity-40 hover:text-red hover:opacity-100 font-bold">✕</button></td>
+                </tr>`).join('')}
+              <tr>
+                <td class="p-2"></td>
+                <td class="p-2"><input type="number" value="${cat.weight}" onchange="updateGradeCategoryWeight('${subj.id}','${cat.id}', this.value)" class="border-2 border-red rule thick px-2 py-1 w-full focus:outline-none font-bold text-red"></td>
+                <td class="p-2 opacity-70 italic" colspan="2"><button onclick="addNewGradeEntry('${subj.id}','${cat.id}')" class="icon-badge-btn text-red font-bold hover:underline"><span class="icon-inline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>ADD ENTRY</button></td>
+                <td class="p-2 text-right data-num font-bold">${catAvg === null ? '—' : catAvg.toFixed(0) + '%'}</td>
+                <td class="p-2 text-right"><button onclick="deleteGradeCategory('${subj.id}','${cat.id}')" class="opacity-40 hover:text-red hover:opacity-100 font-bold">🗑</button></td>
+              </tr>
+            </tbody>
+          </table>`;
+        catContainer.appendChild(catBox);
+      });
+    });
+  }
+
+  function addNewGradeSubjectRow() {
+    systemSubjects.push({ id: 'subj-' + Date.now(), name: 'New Subject', categories: [{ id: 'cat-' + Date.now(), name: 'Category', weight: 100, entries: [] }] });
+    saveStateInventoriesToCaches(); renderGradesSpreadsheet(); renderDashboardInterfacePipelineMetrics();
+  }
+  function deleteGradeSubject(subjId) {
+    if (!confirm("Delete this subject and all its grades?")) return;
+    systemSubjects = systemSubjects.filter(s => s.id !== subjId);
+    saveStateInventoriesToCaches(); renderGradesSpreadsheet(); renderDashboardInterfacePipelineMetrics();
+  }
+  function renameGradeSubject(subjId, val) {
+    const s = systemSubjects.find(x => x.id === subjId); s.name = val.trim() || s.name;
+    saveStateInventoriesToCaches(); renderDashboardInterfacePipelineMetrics();
+  }
+  function addNewGradeCategory(subjId) {
+    const s = systemSubjects.find(x => x.id === subjId);
+    s.categories.push({ id: 'cat-' + Date.now(), name: 'New Category', weight: 0, entries: [] });
+    saveStateInventoriesToCaches(); renderGradesSpreadsheet();
+  }
+  function deleteGradeCategory(subjId, catId) {
+    const s = systemSubjects.find(x => x.id === subjId);
+    s.categories = s.categories.filter(c => c.id !== catId);
+    saveStateInventoriesToCaches(); renderGradesSpreadsheet(); renderDashboardInterfacePipelineMetrics();
+  }
+  function renameGradeCategory(subjId, catId, val) {
+    const c = systemSubjects.find(x => x.id === subjId).categories.find(c => c.id === catId);
+    c.name = val.trim() || c.name;
+    saveStateInventoriesToCaches();
+  }
+  function updateGradeCategoryWeight(subjId, catId, val) {
+    const c = systemSubjects.find(x => x.id === subjId).categories.find(c => c.id === catId);
+    c.weight = parseFloat(val) || 0;
+    saveStateInventoriesToCaches(); renderGradesSpreadsheet(); renderDashboardInterfacePipelineMetrics();
+  }
+  function addNewGradeEntry(subjId, catId) {
+    const c = systemSubjects.find(x => x.id === subjId).categories.find(c => c.id === catId);
+    c.entries.push({ id: 'e-' + Date.now(), label: 'New Entry', num: 0, den: 100 });
+    saveStateInventoriesToCaches(); renderGradesSpreadsheet(); renderDashboardInterfacePipelineMetrics();
+  }
+  function deleteGradeEntry(subjId, catId, entryId) {
+    const c = systemSubjects.find(x => x.id === subjId).categories.find(c => c.id === catId);
+    c.entries = c.entries.filter(e => e.id !== entryId);
+    saveStateInventoriesToCaches(); renderGradesSpreadsheet(); renderDashboardInterfacePipelineMetrics();
+  }
+  function updateGradeEntryField(subjId, catId, entryId, field, val) {
+    const e = systemSubjects.find(x => x.id === subjId).categories.find(c => c.id === catId).entries.find(e => e.id === entryId);
+    e[field] = (field === 'num' || field === 'den') ? (parseFloat(val) || 0) : val;
+    saveStateInventoriesToCaches(); renderGradesSpreadsheet(); renderDashboardInterfacePipelineMetrics();
+  }
+
+  // ================= ACCOUNT =================
+  async function saveUserProfileSettingsState() {
+    const name = document.getElementById('profile-name-input').value.trim();
+    if (!name) return alert("Display name can't be blank.");
+    try {
+      const { user } = await apiRequest('/api/me', { method: 'PUT', body: {
+        name, school: document.getElementById('profile-school-input').value,
+        age: document.getElementById('profile-age-input').value,
+        grade: document.getElementById('profile-grade-input').value
+      }});
+      currentUserProfile = user;
+      alert("Profile saved!");
+      switchTab('dashboard');
+      document.getElementById('dashboard-welcome-banner').innerText = `Welcome back, ${user.name}.`;
+      document.getElementById('header-username-readout').innerText = user.name.toUpperCase();
+    } catch (err) { alert(err.message); }
+  }
+
+  // Initial render (files list — decks/tasks/etc render once state loads post-login)
+  renderWorkspaceFilesHubList();
+  setAuthMode('login');
+</script>
+</body>
+</html>
