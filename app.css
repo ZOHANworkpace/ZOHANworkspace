@@ -121,11 +121,7 @@ a { color: inherit; }
 .border-r-2{ border-right-width: 1.5px; border-right-style: solid; }
 .border-dashed { border-style: dashed; }
 
-/* Any bordered "box" in the app becomes a frosted glass card.
-   NOTE: uses `background` (not background-color) only for the
-   glass fill/blur/shadow — color utilities below are re-asserted
-   with higher-specificity two-class rules so bg-white / bg-ink /
-   bg-yellow-100 aren't silently overridden by this fallback. */
+/* Any bordered "box" in the app becomes a frosted glass card. */
 .border, .border-2 {
   border-color: var(--glass-border) !important;
   background: var(--glass-fill);
@@ -138,9 +134,7 @@ a { color: inherit; }
 .border-2.hard-shadow:hover,
 .border:hover { box-shadow: 0 14px 40px rgba(31, 89, 82, 0.20); }
 
-/* Re-assert explicit bg-* utilities so they win over the glass
-   default above regardless of source order (two-class selectors
-   beat the single-class .border/.border-2 rule on specificity). */
+/* Re-assert explicit bg-* utilities so they win over the glass default above */
 .bg-white.border, .bg-white.border-2         { background: var(--glass-fill-strong); }
 .bg-ink.border, .bg-ink.border-2             { background: var(--ink); }
 .bg-ink\/50.border, .bg-ink\/50.border-2     { background: rgba(27,42,46,.5); }
@@ -279,7 +273,6 @@ a { color: inherit; }
 .pt-1 { padding-top: 0.25rem; } .pt-2 { padding-top: 0.5rem; } .pt-3 { padding-top: 0.75rem; } .pt-4 { padding-top: 1rem; }
 .pl-4 { padding-left: 1rem; }
 .pr-1 { padding-right: 0.25rem; } .pr-2 { padding-right: 0.5rem; } .pr-10 { padding-right: 2.5rem; }
-.mx-auto { margin-left: auto; margin-right: auto; }
 .mb-0\.5 { margin-bottom: 0.125rem; } .mb-1 { margin-bottom: 0.25rem; } .mb-2 { margin-bottom: 0.5rem; }
 .mb-3 { margin-bottom: 0.75rem; } .mb-4 { margin-bottom: 1rem; }
 .mt-0\.5 { margin-top: 0.125rem; } .mt-1 { margin-top: 0.25rem; } .mt-2 { margin-top: 0.5rem; }
@@ -311,14 +304,12 @@ a { color: inherit; }
 .focus\:ring-0:focus       { box-shadow: none; }
 .focus\:border-red:focus   { border-color: var(--red) !important; box-shadow: 0 0 0 4px rgba(232,120,90,.18); }
 
-/* ---------- opacity ----------
-   Bumped up from the original .4/.5/.6 floor — those read as
-   near-invisible grey-on-glass. Everything stays legible now. */
+/* ---------- opacity ---------- */
 .opacity-40 { opacity: .62; } .opacity-50 { opacity: .68; } .opacity-60 { opacity: .74; }
 .opacity-70 { opacity: .8; } .opacity-80 { opacity: .88; } .opacity-90 { opacity: .94; }
 
 /* ============================================================
-   Responsive breakpoints (Tailwind defaults: sm 640 / md 768 / lg 1024 / xl 1280)
+   Responsive breakpoints (Desktop first / Upwards scalers)
    ============================================================ */
 @media (min-width: 640px) {
   .sm\:block { display: block; }
@@ -673,76 +664,23 @@ button.press, a.press { will-change: transform; }
    Smoother page/tab scroll feel
    ============================================================ */
 main.canvas-bg { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-/* --- UNIVERSAL TABLET & PHONE OPTIMIZATION --- */
-@media (max-width: 1024px) {
-  /* 1. Make the body allow scrolling instead of hiding overflow */
-  body {
-    overflow-y: auto !important;
-    height: auto !important;
-    min-height: 100vh;
-  }
 
-  /* 2. Move the sidebar to a bottom navigation bar for easy thumb access */
-  .sidebar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100% !important;
-    height: 70px !important;
-    flex-direction: row !important;
-    justify-content: space-around;
-    align-items: center;
-    border-radius: 20px 20px 0 0;
-    z-index: 1000;
-    padding: 0 10px !important;
-    box-sizing: border-box;
-  }
-
-  /* 3. Adjust the main workspace layout to fit smaller screens */
-  .main-content {
-    margin-left: 0 !important;
-    margin-bottom: 90px !important; /* Leaves room so bottom nav doesn't cover content */
-    padding: 20px 15px !important;
-    height: auto !important;
-    overflow-y: visible !important; /* Allows natural scrolling */
-  }
-
-  /* 4. Force grid cards to stack vertically on portrait tablet/mobile */
-  .grid-container, .dashboard-grid, .cards-layout {
-    grid-template-columns: 1fr !important; 
-    gap: 20px !important;
-  }
-
-  /* 5. Scale down heading text slightly so titles don't wrap weirdly */
-  h1 {
-    font-size: 1.8rem !important;
-  }
-     /* Force the html and body elements to allow scrolling */
-  html, body, #root, .main-container {
-    overflow: visible !important;
-    overflow-y: auto !important;
-    height: auto !important;
-  }
-
-  /* Target any full-screen layouts that might be trapping the content */
-  .min-h-screen, .h-screen {
-    height: auto !important;
-    min-height: 100vh !important;
-    overflow: visible !important;
-  }
-}
-/* --- UNIVERSAL TABLET & PHONE SCROLL OVERRIDE --- */
+/* ============================================================
+   UNIVERSAL TABLET & PHONE SCROLL OVERRIDE (Mobile Breakpoint)
+   ============================================================ */
 @media (max-width: 1024px) {
 
   /* 1. Force absolute scrolling on every wrapper layout container imaginable */
   html, body, #root, #app, 
   .main-container, .canvas-bg, main, 
   [class*="overflow-hidden"], 
-  [class*="-screen"] {
+  [class*="-screen"],
+  .min-h-screen, .h-screen {
     overflow: visible !important;
     overflow-y: auto !important;
     height: auto !important;
     max-height: none !important;
+    min-height: 100vh !important;
     -webkit-overflow-scrolling: touch !important; /* Smooth iOS physics */
   }
 
@@ -764,6 +702,7 @@ main.canvas-bg { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
     background: var(--glass-fill-strong) !important;
     backdrop-filter: blur(24px) saturate(180%) !important;
     border-top: 1.5px solid var(--glass-border) !important;
+    box-shadow: 0 -8px 24px rgba(31, 89, 82, 0.12) !important;
   }
 
   /* Keep nav item popups behaving on horizontal rail */
@@ -787,10 +726,11 @@ main.canvas-bg { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
     width: 100% !important;
     max-width: 100vw !important;
     height: auto !important;
+    overflow-y: visible !important; /* Allows natural scrolling */
   }
 
   /* 4. Force columns down to a single stack */
-  .grid, [class*="grid-cols-"] {
+  .grid, [class*="grid-cols-"], .grid-container, .dashboard-grid, .cards-layout {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
   }
@@ -799,5 +739,18 @@ main.canvas-bg { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
   h1, .text-5xl, .md\:text-5xl {
     font-size: 2rem !important;
     line-height: 1.2 !important;
+  }
+
+  /* 6. Prevent inactive overlays from blocking touch events */
+  #login-wall-overlay:not(.flex), 
+  .hidden, 
+  [style*="display: none"] {
+    pointer-events: none !important;
+    display: none !important;
+  }
+
+  /* 7. Ensure interactive components allow vertical scrolling gestures */
+  *, .widget-window, .main-content, .grid-container, .dashboard-grid {
+    touch-action: pan-y !important;
   }
 }
