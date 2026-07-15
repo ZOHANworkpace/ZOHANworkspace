@@ -37,10 +37,85 @@
   --radius-md: 20px;
   --radius-lg: 28px;
   --radius-pill: 999px;
+
+  /* -- layout constants used by the scroll architecture below -- */
+  --sidebar-w: 68px;
+  --bottom-nav-h: 65px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0; }
-html { scroll-behavior: smooth; }
+
+/* ============================================================
+   SCROLL ARCHITECTURE — read this before touching layout
+   ------------------------------------------------------------
+   The old approach tried to force scrolling from the *outside in*
+   with a giant wildcard `@media (max-width:1024px)` block full of
+   `!important`, hitting every element that looked like it might be
+   a container. That fights itself (two rules on the same element
+   both !important, order decides, so it's a coin flip) and it does
+   nothing for the actual bug, which is almost always one of:
+     1. A fixed-height ancestor (100vh / h-screen) with
+        overflow:hidden sits between <body> and your content, so
+        anything past one screen is literally clipped, not just
+        "not scrolling".
+     2. `html, body` never got height:100% + overflow-y:auto in the
+        first place, so the *browser* has nothing to scroll either.
+     3. touch-action:none on a draggable widget also blocks the
+        finger-swipe that would've scrolled the page underneath it.
+   Fixed from the root down here, instead of patched from the leaves
+   up in a breakpoint. This applies at ALL sizes, not just <1024px —
+   scrolling shouldn't be a mobile-only afterthought.
+   ============================================================ */
+
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+}
+body {
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* momentum scroll on iOS Safari */
+  overscroll-behavior-y: contain;    /* stop the whole page rubber-banding when a widget scrolls */
+}
+
+/* If a sidebar + main-content pair are siblings anywhere in the tree
+   (the normal shape for this app), turn on a proper flex shell where
+   the sidebar keeps its own height and ONLY the main pane scrolls.
+   :has() lets this work without needing to know your exact wrapper
+   markup — if you have a dedicated shell div, add class="app-shell"
+   to it and the same rule applies more precisely. */
+.app-shell,
+body:has(.sidebar) {
+  display: flex;
+  min-height: 100vh;
+}
+
+main.canvas-bg,
+.main-content {
+  flex: 1 1 auto;
+  min-width: 0;           /* prevents flex children from refusing to shrink and blowing out width */
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Any element still carrying Tailwind's h-screen / min-h-screen
+   inside the scrollable main pane should not re-clip its own
+   content — height should describe a floor, not a ceiling, once
+   it's inside something that already scrolls. */
+main.canvas-bg .h-screen,
+main.canvas-bg .min-h-screen,
+.main-content .h-screen,
+.main-content .min-h-screen {
+  height: auto;
+  min-height: 100vh;
+}
+
+body { scroll-behavior: smooth; }
+button, input, select, textarea { font: inherit; color: inherit; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
   color: var(--ink);
@@ -51,7 +126,6 @@ body {
     var(--paper);
   background-attachment: fixed;
 }
-button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; background: none; border: none; transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease, background .25s ease, opacity .2s ease; }
 a { color: inherit; }
 
@@ -249,6 +323,16 @@ a { color: inherit; }
 .max-h-\[90vh\] { max-height: 90vh; }
 .max-h-\[92vh\] { max-height: 92vh; }
 
+/* Any element using a max-h-* clamp is meant to be an internally
+   scrolling panel (a chat log, a dropdown list, etc). Give every one
+   of them scroll instead of silent clipping, even where the markup
+   forgot to add overflow-y-auto explicitly. */
+.max-h-24, .max-h-48, .max-h-64, .max-h-72,
+.max-h-\[90vh\], .max-h-\[92vh\] {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ---------- spacing ---------- */
 .p-0 { padding: 0; } .p-1\.5 { padding: 0.375rem; } .p-2 { padding: 0.5rem; }
 .p-2\.5 { padding: 0.625rem; } .p-3 { padding: 0.75rem; } .p-4 { padding: 1rem; }
@@ -422,8 +506,15 @@ a { color: inherit; }
 .step-dot.active { background: linear-gradient(var(--teal), var(--lime)); border-color: transparent; transform: scale(1.25); box-shadow: 0 0 0 4px rgba(47,182,168,.18); }
 .step-dot.done { background: var(--lime); border-color: transparent; }
 
+/* Draggable floating windows. touch-action was fully `none` before,
+   which also swallows a vertical swipe that starts on top of a
+   widget — the page underneath looked "stuck". pan-y lets a
+   one-finger vertical swipe still scroll the canvas; your drag JS
+   should grab the pointer (setPointerCapture) on horizontal/diagonal
+   moves or on a dedicated title-bar handle, which still works fine
+   alongside pan-y. */
 .widget-window {
-  position: absolute; z-index: 40; touch-action: none;
+  position: absolute; z-index: 40; touch-action: pan-y;
   animation: fadeUp .35s cubic-bezier(.22,1,.36,1) both;
 }
 
@@ -438,7 +529,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--teal) !important
 header, aside { background: var(--glass-fill-strong); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); }
 
 .sidebar {
-  width: 68px;
+  width: var(--sidebar-w);
+  flex-shrink: 0;
   background: transparent !important;
   box-shadow: none;
   border-radius: 0;
@@ -666,91 +758,192 @@ button.press, a.press { will-change: transform; }
 main.canvas-bg { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
 
 /* ============================================================
-   UNIVERSAL TABLET & PHONE SCROLL OVERRIDE (Mobile Breakpoint)
+   TIKTOK-STYLE SNAP SCROLLING (opt-in, portrait-first)
+   ------------------------------------------------------------
+   This is a UTILITY, not automatic — CSS can't know which parts
+   of your markup should behave like full-screen swipeable cards.
+   Wrap the scroll container in `.snap-scroll` and give each
+   full-screen block `.snap-section` and you get the vertical,
+   one-screen-at-a-time swipe feel (feed, story view, onboarding,
+   deck-review, whatever). Everything else on the page keeps
+   scrolling normally.
    ============================================================ */
+.snap-scroll {
+  height: 100vh;
+  height: 100dvh; /* accounts for mobile browser chrome showing/hiding */
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+.snap-section {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+/* Horizontal variant, for a card-carousel that should snap left/right
+   instead of top/bottom — swap `.snap-scroll` for `.snap-scroll-x` and
+   `.snap-section` for `.snap-section-x` on the same pattern. */
+.snap-scroll-x {
+  display: flex;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+.snap-section-x {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+/* ============================================================
+   TABLET & PHONE RESPONSIVE OVERRIDE
+   ------------------------------------------------------------
+   Rewritten to be scoped and specific instead of wildcard-matching
+   every class name that contains "screen" or "overflow-hidden" —
+   the old version fought its own !important rules depending on
+   source order. This targets the real layout primitives
+   (.sidebar, main.canvas-bg/.main-content, .grid) directly, and
+   splits portrait vs landscape so a landscape tablet doesn't get
+   squeezed into a phone's single-column bottom-nav layout.
+   ============================================================ */
+
+/* Shared tablet-and-below rules (both orientations, <=1024px) */
 @media (max-width: 1024px) {
-
-  /* 1. Force absolute scrolling on every wrapper layout container imaginable */
-  html, body, #root, #app, 
-  .main-container, .canvas-bg, main, 
-  [class*="overflow-hidden"], 
-  [class*="-screen"],
-  .min-h-screen, .h-screen {
-    overflow: visible !important;
-    overflow-y: auto !important;
-    height: auto !important;
-    max-height: none !important;
-    min-height: 100vh !important;
-    -webkit-overflow-scrolling: touch !important; /* Smooth iOS physics */
+  main.canvas-bg,
+  .main-content {
+    max-height: none;
+    height: auto;
+    overflow-y: visible; /* the page itself scrolls, see .sidebar bottom-nav below */
+  }
+  body:has(.sidebar) {
+    display: block; /* drop the flex row now that sidebar becomes a bottom bar */
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
-  /* 2. Turn the sidebar into a sleek bottom nav rail */
+  /* Sidebar → bottom nav bar */
   .sidebar {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    top: auto !important;
-    width: 100% !important;
-    height: 65px !important;
-    flex-direction: row !important;
-    justify-content: space-around !important;
-    align-items: center !important;
-    border-radius: 20px 20px 0 0 !important;
-    z-index: 1000 !important;
-    padding: 0 10px !important;
-    box-sizing: border-box !important;
-    background: var(--glass-fill-strong) !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
-    border-top: 1.5px solid var(--glass-border) !important;
-    box-shadow: 0 -8px 24px rgba(31, 89, 82, 0.12) !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    top: auto;
+    width: 100%;
+    height: var(--bottom-nav-h);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    border-radius: 20px 20px 0 0;
+    z-index: 1000;
+    padding: 0 10px;
+    background: var(--glass-fill-strong);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-top: 1.5px solid var(--glass-border);
+    box-shadow: 0 -8px 24px rgba(31, 89, 82, 0.12);
+  }
+  .nav-slot { margin: 0; }
+  .nav-slot:hover { width: 44px; } /* no hover-expand on touch */
+  .sidebar-brand, .sidebar-foot { display: none; }
+
+  /* Content area clears the bottom nav and gets breathing room */
+  main.canvas-bg,
+  .main-content {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 16px;
+    padding-bottom: calc(var(--bottom-nav-h) + 24px);
+    width: 100%;
+    max-width: 100vw;
   }
 
-  /* Keep nav item popups behaving on horizontal rail */
-  .nav-slot {
-    margin: 0 !important;
-  }
-  .nav-slot:hover {
-    width: 44px !important; /* Don't expand wide on hover on mobile */
-  }
-  .sidebar-brand, .sidebar-foot {
-    display: none !important; /* Hide desktop logos on bottom nav */
+  /* Grids collapse to a single column by default on tablet-and-below;
+     the portrait/landscape blocks further down widen this back out
+     for tablets, since one column on a 1024px-wide landscape tablet
+     wastes the screen. */
+  .grid, [class*="grid-cols-"] {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
-  /* 3. Free the main content area to take full layout space */
-  .main-content, main, injector-layout {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    margin-top: 0 !important;
-    margin-bottom: 80px !important; /* Ensures bottom nav never clips text */
-    padding: 16px !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-    height: auto !important;
-    overflow-y: visible !important; /* Allows natural scrolling */
-  }
-
-  /* 4. Force columns down to a single stack */
-  .grid, [class*="grid-cols-"], .grid-container, .dashboard-grid, .cards-layout {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
-
-  /* 5. Scale down major display text sizes */
   h1, .text-5xl, .md\:text-5xl {
-    font-size: 2rem !important;
-    line-height: 1.2 !important;
+    font-size: 2rem;
+    line-height: 1.2;
   }
 
-  /* 6. Prevent inactive overlays from blocking touch events */
-  #login-wall-overlay:not(.flex), 
-  .hidden, 
-  [style*="display: none"] {
-    pointer-events: none !important;
-    display: none !important;
-  }
+  * { touch-action: manipulation; } /* removes the 300ms tap delay app-wide without blocking scroll */
+  main.canvas-bg, .main-content, .widget-window { touch-action: pan-y; }
+}
 
-  /* 7. Ensure interactive components allow vertical scrolling gestures */
-  *, .widget-window, .main-content, .grid-container, .dashboard-grid {
-    touch-action: pan-y !important;
+/* Phones and small tablets in portrait: true single column */
+@media (max-width: 1024px) and (orientation: portrait) {
+  .grid, [class*="grid-cols-"] {
+    grid-template-columns: 1fr;
   }
+}
+
+/* Tablets, portrait: iPad mini/Air/Pro-ish widths (600–1024px) get
+   two columns where the phone layout only had one — there's room. */
+@media (min-width: 600px) and (max-width: 1024px) and (orientation: portrait) {
+  .grid, [class*="grid-cols-"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  h1, .text-5xl, .md\:text-5xl { font-size: 2.5rem; }
+}
+
+/* Tablets, landscape: wide enough to keep the desktop side-rail
+   instead of dropping to a bottom bar, and to run 3 columns. */
+@media (min-width: 900px) and (max-width: 1366px) and (orientation: landscape) {
+  body:has(.sidebar) { display: flex; }
+  .sidebar {
+    position: static;
+    width: var(--sidebar-w);
+    height: auto;
+    flex-direction: column;
+    border-radius: 0;
+    padding: 6px 0 0;
+    box-shadow: none;
+    border-top: none;
+  }
+  .sidebar-brand, .sidebar-foot { display: flex; }
+  .nav-slot { margin: 7px auto; }
+  .nav-slot:hover { width: 172px; }
+
+  main.canvas-bg,
+  .main-content {
+    padding: 24px;
+    padding-bottom: 24px; /* no bottom nav to clear in this mode */
+  }
+  .grid, [class*="grid-cols-"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Small-tablet landscape (e.g. 8" tablets ~800–1024px wide, short height):
+   keep the bottom nav (not enough width for a rail + 3 columns to feel
+   right) but restore 2 columns since landscape has the horizontal room. */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .grid, [class*="grid-cols-"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Any inactive overlay should never eat touch events, on any size */
+#login-wall-overlay:not(.flex),
+.hidden,
+[style*="display: none"] {
+  pointer-events: none !important;
+  display: none !important;
 }
