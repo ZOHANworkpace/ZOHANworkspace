@@ -731,3 +731,73 @@ main.canvas-bg { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
     overflow: visible !important;
   }
 }
+/* --- UNIVERSAL TABLET & PHONE SCROLL OVERRIDE --- */
+@media (max-width: 1024px) {
+
+  /* 1. Force absolute scrolling on every wrapper layout container imaginable */
+  html, body, #root, #app, 
+  .main-container, .canvas-bg, main, 
+  [class*="overflow-hidden"], 
+  [class*="-screen"] {
+    overflow: visible !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    -webkit-overflow-scrolling: touch !important; /* Smooth iOS physics */
+  }
+
+  /* 2. Turn the sidebar into a sleek bottom nav rail */
+  .sidebar {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    height: 65px !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    border-radius: 20px 20px 0 0 !important;
+    z-index: 1000 !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    background: var(--glass-fill-strong) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    border-top: 1.5px solid var(--glass-border) !important;
+  }
+
+  /* Keep nav item popups behaving on horizontal rail */
+  .nav-slot {
+    margin: 0 !important;
+  }
+  .nav-slot:hover {
+    width: 44px !important; /* Don't expand wide on hover on mobile */
+  }
+  .sidebar-brand, .sidebar-foot {
+    display: none !important; /* Hide desktop logos on bottom nav */
+  }
+
+  /* 3. Free the main content area to take full layout space */
+  .main-content, main, injector-layout {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 80px !important; /* Ensures bottom nav never clips text */
+    padding: 16px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    height: auto !important;
+  }
+
+  /* 4. Force columns down to a single stack */
+  .grid, [class*="grid-cols-"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* 5. Scale down major display text sizes */
+  h1, .text-5xl, .md\:text-5xl {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+  }
+}
