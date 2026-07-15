@@ -121,7 +121,11 @@ a { color: inherit; }
 .border-r-2{ border-right-width: 1.5px; border-right-style: solid; }
 .border-dashed { border-style: dashed; }
 
-/* Any bordered "box" in the app becomes a frosted glass card. */
+/* Any bordered "box" in the app becomes a frosted glass card.
+   NOTE: uses `background` (not background-color) only for the
+   glass fill/blur/shadow — color utilities below are re-asserted
+   with higher-specificity two-class rules so bg-white / bg-ink /
+   bg-yellow-100 aren't silently overridden by this fallback. */
 .border, .border-2 {
   border-color: var(--glass-border) !important;
   background: var(--glass-fill);
@@ -133,6 +137,20 @@ a { color: inherit; }
 }
 .border-2.hard-shadow:hover,
 .border:hover { box-shadow: 0 14px 40px rgba(31, 89, 82, 0.20); }
+
+/* Re-assert explicit bg-* utilities so they win over the glass
+   default above regardless of source order (two-class selectors
+   beat the single-class .border/.border-2 rule on specificity). */
+.bg-white.border, .bg-white.border-2         { background: var(--glass-fill-strong); }
+.bg-ink.border, .bg-ink.border-2             { background: var(--ink); }
+.bg-ink\/50.border, .bg-ink\/50.border-2     { background: rgba(27,42,46,.5); }
+.bg-ink\/60.border, .bg-ink\/60.border-2     { background: rgba(27,42,46,.6); }
+.bg-ink\/90.border, .bg-ink\/90.border-2     { background: rgba(27,42,46,.72); }
+.bg-paper.border, .bg-paper.border-2         { background: var(--paper); }
+.bg-paperDim.border, .bg-paperDim.border-2   { background: var(--paperDim); }
+.bg-red.border, .bg-red.border-2             { background: var(--red); }
+.bg-transparent.border, .bg-transparent.border-2 { background: transparent; }
+.bg-yellow-100.border, .bg-yellow-100.border-2   { background: var(--yellow-soft); }
 
 /* ---------- display / position ---------- */
 .hidden       { display: none !important; }
@@ -464,7 +482,7 @@ header, aside { background: var(--glass-fill-strong); backdrop-filter: blur(24px
 }
 .nav-icon {
   display: flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px; shrink: 0; flex-shrink: 0;
+  width: 44px; height: 44px; flex-shrink: 0;
   opacity: .5; transition: opacity .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
 }
 .nav-icon svg { width: 19px; height: 19px; }
@@ -698,5 +716,18 @@ main.canvas-bg { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
   /* 5. Scale down heading text slightly so titles don't wrap weirdly */
   h1 {
     font-size: 1.8rem !important;
+  }
+     /* Force the html and body elements to allow scrolling */
+  html, body, #root, .main-container {
+    overflow: visible !important;
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+
+  /* Target any full-screen layouts that might be trapping the content */
+  .min-h-screen, .h-screen {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
   }
 }
