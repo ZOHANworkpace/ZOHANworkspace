@@ -655,3 +655,48 @@ button.press, a.press { will-change: transform; }
    Smoother page/tab scroll feel
    ============================================================ */
 main.canvas-bg { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+/* --- UNIVERSAL TABLET & PHONE OPTIMIZATION --- */
+@media (max-width: 1024px) {
+  /* 1. Make the body allow scrolling instead of hiding overflow */
+  body {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+
+  /* 2. Move the sidebar to a bottom navigation bar for easy thumb access */
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    height: 70px !important;
+    flex-direction: row !important;
+    justify-content: space-around;
+    align-items: center;
+    border-radius: 20px 20px 0 0;
+    z-index: 1000;
+    padding: 0 10px !important;
+    box-sizing: border-box;
+  }
+
+  /* 3. Adjust the main workspace layout to fit smaller screens */
+  .main-content {
+    margin-left: 0 !important;
+    margin-bottom: 90px !important; /* Leaves room so bottom nav doesn't cover content */
+    padding: 20px 15px !important;
+    height: auto !important;
+    overflow-y: visible !important; /* Allows natural scrolling */
+  }
+
+  /* 4. Force grid cards to stack vertically on portrait tablet/mobile */
+  .grid-container, .dashboard-grid, .cards-layout {
+    grid-template-columns: 1fr !important; 
+    gap: 20px !important;
+  }
+
+  /* 5. Scale down heading text slightly so titles don't wrap weirdly */
+  h1 {
+    font-size: 1.8rem !important;
+  }
+}
